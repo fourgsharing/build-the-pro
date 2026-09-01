@@ -1038,7 +1038,7 @@ function renderMenteeForm(){
     ${(()=>{
       const fiveOpts = [];
       for(let i=1;i<=35;i++){ if(String(resp.skill[i])==='5') fiveOpts.push({i, q:SKILL_QUESTIONS[i-1]}); }
-      if(!fiveOpts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 5. Isi Part 1 terlebih dahulu.</p>';
+      if(!fiveOpts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 5. </p>';
       return fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-strength-q="${o.i}" value="${esc(o.q)}" ${refl.strengths.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
     })()}
     </div>
@@ -1090,7 +1090,7 @@ function renderMenteeForm(){
     ${(()=>{
       const fiveOpts = [];
       for(let i=1;i<=15;i++){ if(String(resp.drive[i])==='5') fiveOpts.push({i, q:DRIVE_QUESTIONS[i-1]}); }
-      if(!fiveOpts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 5. Isi Part 2 terlebih dahulu.</p>';
+      if(!fiveOpts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 5. </p>';
       const selected = Array.isArray(refl.activeDrivers) ? refl.activeDrivers : [];
       return fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-driver-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
     })()}
@@ -1101,7 +1101,7 @@ function renderMenteeForm(){
     ${(()=>{
       const opts = [];
       for(let i=1;i<=15;i++){ const v=String(resp.drive[i]); if(v==='3'||v==='4') opts.push({i, q:DRIVE_QUESTIONS[i-1]}); }
-      if(!opts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 3 atau 4. Isi Part 2 terlebih dahulu.</p>';
+      if(!opts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 3 atau 4. </p>';
       const selected = Array.isArray(refl.driversToStrengthen) ? refl.driversToStrengthen : [];
       return opts.map(o=>`<label class="radio-line"><input type="checkbox" data-strengthen-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
     })()}
@@ -1112,7 +1112,7 @@ function renderMenteeForm(){
     ${(()=>{
       const opts = [];
       for(let i=1;i<=15;i++){ const v=String(resp.drive[i]); if(v==='1'||v==='2') opts.push({i, q:DRIVE_QUESTIONS[i-1]}); }
-      if(!opts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 1 atau 2. Isi Part 2 terlebih dahulu.</p>';
+      if(!opts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 1 atau 2. </p>';
       const selected = Array.isArray(refl.movementBlockers) ? refl.movementBlockers.map(b=>b.what) : [];
       return opts.map(o=>`<label class="radio-line"><input type="checkbox" data-blocker-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
     })()}
@@ -1271,7 +1271,7 @@ function updateStrengthChecklist(resp){
   if(!container) return;
   const fiveOpts = [];
   for(let i=1;i<=35;i++){ if(String(resp.skill[i])==='5') fiveOpts.push({i, q:SKILL_QUESTIONS[i-1]}); }
-  if(!fiveOpts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 5. Isi Part 1 terlebih dahulu.</p>'; return; }
+  if(!fiveOpts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 5. </p>'; return; }
   container.innerHTML = fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-strength-q="${o.i}" value="${esc(o.q)}" ${resp.reflections.strengths.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
 }
 
@@ -1281,7 +1281,7 @@ function updateDriverChecklist(resp){
   const fiveOpts = [];
   for(let i=1;i<=15;i++){ if(String(resp.drive[i])==='5') fiveOpts.push({i, q:DRIVE_QUESTIONS[i-1]}); }
   const selected = Array.isArray(resp.reflections.activeDrivers) ? resp.reflections.activeDrivers : [];
-  if(!fiveOpts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 5. Isi Part 2 terlebih dahulu.</p>'; return; }
+  if(!fiveOpts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 5. </p>'; return; }
   container.innerHTML = fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-driver-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
 }
 
@@ -1291,7 +1291,7 @@ function updateStrengthenChecklist(resp){
   const opts = [];
   for(let i=1;i<=15;i++){ const v=String(resp.drive[i]); if(v==='3'||v==='4') opts.push({i, q:DRIVE_QUESTIONS[i-1]}); }
   const selected = Array.isArray(resp.reflections.driversToStrengthen) ? resp.reflections.driversToStrengthen : [];
-  if(!opts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 3 atau 4. Isi Part 2 terlebih dahulu.</p>'; return; }
+  if(!opts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 3 atau 4. </p>'; return; }
   container.innerHTML = opts.map(o=>`<label class="radio-line"><input type="checkbox" data-strengthen-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
 }
 
@@ -1302,7 +1302,7 @@ function updateBlockerChecklist(resp){
   for(let i=1;i<=15;i++){ const v=String(resp.drive[i]); if(v==='1'||v==='2') opts.push({i, q:DRIVE_QUESTIONS[i-1]}); }
   const blockers = Array.isArray(resp.reflections.movementBlockers) ? resp.reflections.movementBlockers : [];
   const selected = blockers.map(b=>b.what);
-  if(!opts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 1 atau 2. Isi Part 2 terlebih dahulu.</p>'; return; }
+  if(!opts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 1 atau 2. </p>'; return; }
   container.innerHTML = opts.map(o=>`<label class="radio-line"><input type="checkbox" data-blocker-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
   renderBlockerNotes(resp);
 }
@@ -2037,7 +2037,7 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     ${trendChart(skillSeries, driveSeries, ROUNDS.map(r=>r.short))}
     <div class="legend-row">
       <span class="legend-swatch"><i style="background:var(--accent-skill)"></i>Skill self-assessment (35 items)</span>
-      <span class="legend-swatch"><i style="background:var(--accent-drive)"></i>Drive / motivation (20 items)</span>
+      <span class="legend-swatch"><i style="background:var(--accent-drive)"></i>Drive / motivation (15 items)</span>
     </div>
     </div></div>`;
 

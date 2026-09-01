@@ -1017,6 +1017,7 @@ function renderMenteeForm(){
   let html = '';
 
   // ---- Part 1: Skill ----
+  html += `<p class="hint"><span class="req">*</span> required — every marked field needs an answer before this round can be submitted.</p>`;
   html += `<div class="card"><div class="card-head">
       <div><div class="tag">Part 1</div><h3>What Can I Really Do?</h3></div>
       <div class="count mono" id="skill-count"></div>
@@ -1033,7 +1034,6 @@ function renderMenteeForm(){
   // ---- Reflection: Strengths & Gaps (between Part 1 and Part 2) ----
   const refl = resp.reflections;
   html += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Strengths &amp; Gaps</h3></div></div><div class="card-body">
-    <p class="hint"><span class="req">*</span> required — every marked field needs an answer before this round can be submitted.</p>
     <div class="field-label">MY STRENGTHS (Pilih maksimal 3 yang akan difokuskan) <span class="req">*</span></div>
     <div id="strengths-checklist" class="checklist-grid">
     ${(()=>{

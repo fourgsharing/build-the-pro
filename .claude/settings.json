@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(identify \"c:/Users/geoff/build-the-pro-tracker/commitment.png\")"
+    ]
+  }
+}

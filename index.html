@@ -872,8 +872,7 @@ function emptyResponse(){
   return {
     skill:{}, drive:{},
     reflections:{
-      strengths:['','',''], devAreas:['','',''],
-      gaps:[blankGap(),blankGap(),blankGap()],
+      strengths:[], devAreas:[], gaps:[],
       lastQ1:'', lastQ2:'', lastQ3:'',
       activeDrivers:[], activeDriver:{what:'',evidence:''},
       driversToStrengthen:[], movementBlockers:[],
@@ -909,7 +908,8 @@ function ensureResponseShape(r){
   const refl = r.reflections;
   Object.keys(blank.reflections).forEach(k=>{ if(refl[k]===undefined) refl[k] = blank.reflections[k]; });
   if(!Array.isArray(refl.gaps)) refl.gaps = [];
-  while(refl.gaps.length<3) refl.gaps.push(blankGap());
+  if(!Array.isArray(refl.devAreas)) refl.devAreas = [];
+  if(!Array.isArray(refl.strengths)) refl.strengths = [];
   if(!Array.isArray(refl.developPeople)) refl.developPeople = [];
   while(refl.developPeople.length<3) refl.developPeople.push(blankDevelopPerson());
   refl.developPeople.forEach(p=>{
@@ -1044,22 +1044,25 @@ function renderMenteeForm(){
     })()}
     </div>
 
-    <div class="field-label">My Top 3 Development Areas — sudah bisa, belum konsisten <span class="req">*</span></div>
-    ${[0,1,2].map(i=>`<div class="top3-row"><span class="idx">${i+1}.</span><input type="text" data-refl="devAreas" data-idx="${i}" value="${esc(refl.devAreas[i])}" placeholder="Area yang perlu lebih konsisten..."></div>`).join('')}
+    <div class="field-label">MY DEVELOPMENT AREAS (Pilih maksimal 3 yang akan difokuskan) <span class="req">*</span></div>
+    <div id="devareas-checklist" class="checklist-grid">
+    ${(()=>{
+      const opts = [];
+      for(let i=1;i<=35;i++){ const v=String(resp.skill[i]); if(v==='3'||v==='4') opts.push({i, q:SKILL_QUESTIONS[i-1]}); }
+      if(!opts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 3 atau 4.</p>';
+      return opts.map(o=>`<label class="radio-line"><input type="checkbox" data-devarea-q="${o.i}" value="${esc(o.q)}" ${refl.devAreas.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+    })()}
+    </div>
 
-    <div class="field-label">My Top 3 Skill Gaps — paling perlu ditingkatkan selama 90 hari <span class="req">*</span></div>
-    ${[0,1,2].map(i=>{
-      const g = refl.gaps[i];
-      return `<div class="gap-block">
-        <h4>Gap ${i+1}</h4>
-        <div class="gap-grid">
-          <div><label>Skill</label><input type="text" data-gap="skill" data-idx="${i}" value="${esc(g.skill)}" placeholder="Nama skill..."></div>
-          <div><label>Current /5</label><input type="number" min="0" max="5" data-gap="current" data-idx="${i}" value="${esc(g.current)}"></div>
-          <div><label>Target /5</label><input type="number" min="0" max="5" data-gap="target" data-idx="${i}" value="${esc(g.target)}"></div>
-        </div>
-        <textarea rows="2" data-gap="evidence" data-idx="${i}" placeholder="Penjelasan...">${esc(g.evidence)}</textarea>
-      </div>`;
-    }).join('')}
+    <div class="field-label">MY SKILL GAPS (Pilih maksimal 3 yang akan difokuskan) <span class="req">*</span></div>
+    <div id="skillgaps-checklist" class="checklist-grid">
+    ${(()=>{
+      const opts = [];
+      for(let i=1;i<=35;i++){ const v=String(resp.skill[i]); if(v==='1'||v==='2') opts.push({i, q:SKILL_QUESTIONS[i-1]}); }
+      if(!opts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 1 atau 2.</p>';
+      return opts.map(o=>`<label class="radio-line"><input type="checkbox" data-skillgap-q="${o.i}" value="${esc(o.q)}" ${refl.gaps.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+    })()}
+    </div>
 
     <div class="field-label">Last Questions <span class="req">*</span></div>
     <p style="font-size:12.5px;color:var(--ink-mute);margin-bottom:4px;">Aktivitas apa yang sebenarnya sudah saya kuasai dengan baik?</p>
@@ -1276,6 +1279,24 @@ function updateStrengthChecklist(resp){
   container.innerHTML = fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-strength-q="${o.i}" value="${esc(o.q)}" ${resp.reflections.strengths.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
 }
 
+function updateDevAreasChecklist(resp){
+  const container = document.getElementById('devareas-checklist');
+  if(!container) return;
+  const opts = [];
+  for(let i=1;i<=35;i++){ const v=String(resp.skill[i]); if(v==='3'||v==='4') opts.push({i, q:SKILL_QUESTIONS[i-1]}); }
+  if(!opts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 3 atau 4.</p>'; return; }
+  container.innerHTML = opts.map(o=>`<label class="radio-line"><input type="checkbox" data-devarea-q="${o.i}" value="${esc(o.q)}" ${resp.reflections.devAreas.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+}
+
+function updateSkillGapsChecklist(resp){
+  const container = document.getElementById('skillgaps-checklist');
+  if(!container) return;
+  const opts = [];
+  for(let i=1;i<=35;i++){ const v=String(resp.skill[i]); if(v==='1'||v==='2') opts.push({i, q:SKILL_QUESTIONS[i-1]}); }
+  if(!opts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 1 atau 2.</p>'; return; }
+  container.innerHTML = opts.map(o=>`<label class="radio-line"><input type="checkbox" data-skillgap-q="${o.i}" value="${esc(o.q)}" ${resp.reflections.gaps.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+}
+
 function updateDriverChecklist(resp){
   const container = document.getElementById('drivers-checklist');
   if(!container) return;
@@ -1328,13 +1349,25 @@ function wireMenteeForm(resp){
       updateMenteeProgress(resp);
       const row = document.getElementById(`${t.dataset.kind}-q-${t.dataset.qid}`);
       if(row) row.classList.remove('missing');
-      if(t.dataset.kind==='skill') updateStrengthChecklist(resp);
+      if(t.dataset.kind==='skill'){ updateStrengthChecklist(resp); updateDevAreasChecklist(resp); updateSkillGapsChecklist(resp); }
       if(t.dataset.kind==='drive'){ updateDriverChecklist(resp); updateStrengthenChecklist(resp); updateBlockerChecklist(resp); }
     }
     if(t.dataset.strengthQ){
       const checked = Array.from(document.querySelectorAll('input[data-strength-q]:checked'));
       if(t.checked && checked.length > 3){ t.checked = false; return; }
       resp.reflections.strengths = checked.map(c=>c.value);
+      saveDB();
+    }
+    if(t.dataset.devareaQ){
+      const checked = Array.from(document.querySelectorAll('input[data-devarea-q]:checked'));
+      if(t.checked && checked.length > 3){ t.checked = false; return; }
+      resp.reflections.devAreas = checked.map(c=>c.value);
+      saveDB();
+    }
+    if(t.dataset.skillgapQ){
+      const checked = Array.from(document.querySelectorAll('input[data-skillgap-q]:checked'));
+      if(t.checked && checked.length > 3){ t.checked = false; return; }
+      resp.reflections.gaps = checked.map(c=>c.value);
       saveDB();
     }
     if(t.dataset.driverQ){
@@ -2059,12 +2092,11 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     </details>
     </div></div>`;
 
-  // Gap tracker
-  const gapRows = refl.gaps.filter(g=>g.skill).map(g=>({label:g.skill, current:g.current, target:g.target}));
-  out += `<div class="card"><div class="card-head"><div><div class="tag">Gap tracker · ${ROUNDS.find(r=>r.key===round).short}</div><h3>Top 3 Skill Gaps — current → target</h3></div></div>
+  // Skill gaps display
+  const gapList = Array.isArray(refl.gaps) ? refl.gaps.filter(Boolean) : [];
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Skill Gaps · ${ROUNDS.find(r=>r.key===round).short}</div><h3>Top Skill Gaps</h3></div></div>
     <div class="card-body">
-    ${gapRows.length ? dumbbellChart(gapRows) : '<span class="empty-line">No gaps recorded for this round.</span>'}
-    <div class="legend-row"><span class="legend-swatch"><i style="background:var(--ink-mute);border-radius:50%;width:9px;height:9px;"></i>Current</span><span class="legend-swatch"><i style="background:var(--accent-skill);border-radius:50%;width:9px;height:9px;"></i>Target</span></div>
+    ${gapList.length ? `<ul>${gapList.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>` : '<span class="empty-line">No gaps recorded for this round.</span>'}
     </div></div>`;
 
   // Reflections

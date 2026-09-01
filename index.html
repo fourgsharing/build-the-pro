@@ -323,15 +323,17 @@
   }
   .form-nav .btn{ min-width:120px; }
   .page-indicator{
-    display:flex; align-items:center; gap:6px;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
     font-size:13px; color:var(--ink-mute); font-family:var(--font-mono);
+    white-space:nowrap;
   }
-  .page-dots{ display:flex; gap:6px; }
+  .page-dots{ display:flex; gap:8px; }
   .page-dot{
-    width:10px; height:10px; border-radius:50%;
-    border:2px solid var(--ink-mute); background:transparent;
-    transition:all .15s; cursor:pointer;
+    width:12px; height:12px; border-radius:50%;
+    border:2px solid var(--border); background:transparent;
+    transition:all .15s; cursor:pointer; display:inline-block;
   }
+  .page-dot:hover{ border-color:var(--accent-skill); }
   .page-dot.dot-active{ background:var(--accent-skill); border-color:var(--accent-skill); }
   .page-dot.dot-done{ background:var(--status-good); border-color:var(--status-good); }
   @media (max-width:560px){
@@ -1063,9 +1065,9 @@ function goToFormPage(page){
   pages.forEach(p => {
     p.classList.toggle('active-page', Number(p.dataset.page) === page);
   });
-  // Update all dot indicators
-  container.querySelectorAll('.page-dot').forEach((dot, i) => {
-    dot.classList.toggle('dot-active', i + 1 === page);
+  // Update all dot indicators (each nav bar has `total` dots)
+  container.querySelectorAll('.page-dot').forEach((dot) => {
+    dot.classList.toggle('dot-active', Number(dot.dataset.gotoPage) === page);
   });
   // Update page number text
   container.querySelectorAll('.page-indicator span:last-child').forEach(s => {

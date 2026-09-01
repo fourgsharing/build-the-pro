@@ -443,6 +443,8 @@
     </div>
 
     <div id="auth-signup-form" style="display:none;">
+      <label for="auth-signup-name">Full Name</label>
+      <input type="text" id="auth-signup-name" placeholder="Your full name">
       <label for="auth-signup-email">Email</label>
       <input type="email" id="auth-signup-email" placeholder="you@example.com">
       <label for="auth-signup-password">Password</label>
@@ -2413,12 +2415,13 @@ document.getElementById('auth-login-btn').addEventListener('click', async ()=>{
 });
 
 document.getElementById('auth-signup-btn').addEventListener('click', async ()=>{
+  const fullName = document.getElementById('auth-signup-name').value.trim();
   const email = document.getElementById('auth-signup-email').value.trim();
   const password = document.getElementById('auth-signup-password').value;
   const inviteCode = document.getElementById('auth-invite-code').value.trim().toUpperCase();
   const errEl = document.getElementById('auth-signup-error');
   errEl.textContent = '';
-  if(!email || !password){ errEl.textContent = 'Email and password are required.'; return; }
+  if(!fullName || !email || !password){ errEl.textContent = 'Full name, email, and password are required.'; return; }
 
   try{
     let assignedRole = 'leadership'; // default for first user
@@ -2448,15 +2451,16 @@ document.getElementById('auth-signup-btn').addEventListener('click', async ()=>{
 
     if(assignedRole === 'mentor'){
       // Create a new mentor record for this user
-      const mentorId = 'mentor-' + slugify(email.split('@')[0]);
+      const mentorId = 'mentor-' + slugify(fullName);
       const finalMentorId = uniqueId(mentorId, MENTORS);
       await db.collection('mentors').doc(finalMentorId).set({
-        name: email.split('@')[0],
+        name: fullName,
         createdAt: new Date().toISOString()
       });
 
       await db.collection('users').doc(uid).set({
         email: email,
+        name: fullName,
         role: 'mentor',
         mentorId: finalMentorId
       });
@@ -2464,6 +2468,7 @@ document.getElementById('auth-signup-btn').addEventListener('click', async ()=>{
       // Leadership — no mentor record needed
       await db.collection('users').doc(uid).set({
         email: email,
+        name: fullName,
         role: 'leadership'
       });
     }

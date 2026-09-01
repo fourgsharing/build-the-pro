@@ -1278,7 +1278,7 @@ function updateStrengthChecklist(resp){
   const fiveOpts = [];
   for(let i=1;i<=35;i++){ if(String(resp.skill[i])==='5') fiveOpts.push({i, q:SKILL_QUESTIONS[i-1]}); }
   if(!fiveOpts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 5. </p>'; return; }
-  container.innerHTML = fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-strength-q="${o.i}" value="${esc(o.q)}" ${resp.reflections.strengths.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+  container.innerHTML = fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-strength-q="${o.i}" value="${esc(o.q)}" ${resp.reflections.strengths.includes(o.q)?'checked':''}><span class="rl-num">${o.i}.</span><span class="rl-text">${esc(o.q)}</span></label>`).join('');
 }
 
 function updateDevAreasChecklist(resp){
@@ -1287,7 +1287,7 @@ function updateDevAreasChecklist(resp){
   const opts = [];
   for(let i=1;i<=35;i++){ const v=String(resp.skill[i]); if(v==='3'||v==='4') opts.push({i, q:SKILL_QUESTIONS[i-1]}); }
   if(!opts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 3 atau 4.</p>'; return; }
-  container.innerHTML = opts.map(o=>`<label class="radio-line"><input type="checkbox" data-devarea-q="${o.i}" value="${esc(o.q)}" ${resp.reflections.devAreas.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+  container.innerHTML = opts.map(o=>`<label class="radio-line"><input type="checkbox" data-devarea-q="${o.i}" value="${esc(o.q)}" ${resp.reflections.devAreas.includes(o.q)?'checked':''}><span class="rl-num">${o.i}.</span><span class="rl-text">${esc(o.q)}</span></label>`).join('');
 }
 
 function updateSkillGapsChecklist(resp){
@@ -1296,7 +1296,7 @@ function updateSkillGapsChecklist(resp){
   const opts = [];
   for(let i=1;i<=35;i++){ const v=String(resp.skill[i]); if(v==='1'||v==='2') opts.push({i, q:SKILL_QUESTIONS[i-1]}); }
   if(!opts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 1 atau 2.</p>'; return; }
-  container.innerHTML = opts.map(o=>`<label class="radio-line"><input type="checkbox" data-skillgap-q="${o.i}" value="${esc(o.q)}" ${resp.reflections.gaps.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+  container.innerHTML = opts.map(o=>`<label class="radio-line"><input type="checkbox" data-skillgap-q="${o.i}" value="${esc(o.q)}" ${resp.reflections.gaps.includes(o.q)?'checked':''}><span class="rl-num">${o.i}.</span><span class="rl-text">${esc(o.q)}</span></label>`).join('');
 }
 
 function updateDriverChecklist(resp){

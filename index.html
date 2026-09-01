@@ -1149,8 +1149,8 @@ function renderMenteeForm(){
     <div class="checklist-grid">
       ${BARRIER_OPTIONS.map((label,i)=>`<label class="radio-line"><input type="checkbox" data-barrier="${i}" ${refl.barriers[i]?'checked':''}> ${esc(label)}</label>`).join('')}
     </div>
-    <div class="field-label">Lainnya <span class="req">*</span></div>
-    <input type="text" data-refl-single="barrierOther" placeholder="Sebutkan..." value="${esc(refl.barrierOther)}" style="width:100%;">
+    <label class="radio-line"><input type="checkbox" id="barrier-other-check" ${refl.barrierOther?'checked':''}> Lainnya</label>
+    <input type="text" id="barrier-other-text" data-refl-single="barrierOther" placeholder="Sebutkan..." value="${esc(refl.barrierOther)}" style="width:100%;margin-top:6px;display:${refl.barrierOther?'block':'none'};">
 
     <div class="field-label">My Biggest Internal Barrier <span class="req">*</span></div>
     <textarea rows="2" data-refl-single="biggestBarrier" placeholder="...">${esc(refl.biggestBarrier)}</textarea>
@@ -1424,6 +1424,20 @@ function wireMenteeForm(resp){
       clearMissingOnInput(t);
     }
   });
+
+  // "Lainnya" checkbox toggle
+  const barrierOtherCheck = document.getElementById('barrier-other-check');
+  const barrierOtherText = document.getElementById('barrier-other-text');
+  if(barrierOtherCheck && barrierOtherText){
+    barrierOtherCheck.addEventListener('change', ()=>{
+      barrierOtherText.style.display = barrierOtherCheck.checked ? 'block' : 'none';
+      if(!barrierOtherCheck.checked){
+        barrierOtherText.value = '';
+        resp.reflections.barrierOther = '';
+        saveDB();
+      }
+    });
+  }
 
   const addPersonBtn = document.getElementById('add-person-btn');
   if(addPersonBtn){

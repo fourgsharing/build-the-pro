@@ -266,8 +266,10 @@
   .field-label:first-child{ margin-top:0; padding-top:0; border-top:none; }
   .req{ color:var(--accent-drive); font-weight:700; }
 
-  .radio-line{ display:flex; align-items:baseline; gap:8px; margin-bottom:6px; font-size:13.5px; }
-  .radio-line input{ accent-color:var(--accent-skill); flex:none; margin-top:3px; }
+  .radio-line{ display:flex; align-items:baseline; gap:6px; margin-bottom:6px; font-size:13.5px; }
+  .radio-line input{ accent-color:var(--accent-skill); flex:none; }
+  .radio-line .rl-num{ font-family:var(--font-mono); color:var(--ink-mute); font-size:11.5px; flex:none; min-width:22px; text-align:right; }
+  .radio-line .rl-text{ flex:1 1 auto; min-width:0; }
   .radio-group{ margin-bottom:4px; }
   .checklist-grid{ display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; margin-bottom:10px; }
   @media (max-width:560px){ .checklist-grid{ grid-template-columns:1fr; } }
@@ -1040,7 +1042,7 @@ function renderMenteeForm(){
       const fiveOpts = [];
       for(let i=1;i<=35;i++){ if(String(resp.skill[i])==='5') fiveOpts.push({i, q:SKILL_QUESTIONS[i-1]}); }
       if(!fiveOpts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 5. </p>';
-      return fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-strength-q="${o.i}" value="${esc(o.q)}" ${refl.strengths.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+      return fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-strength-q="${o.i}" value="${esc(o.q)}" ${refl.strengths.includes(o.q)?'checked':''}><span class="rl-num">${o.i}.</span><span class="rl-text">${esc(o.q)}</span></label>`).join('');
     })()}
     </div>
 
@@ -1050,7 +1052,7 @@ function renderMenteeForm(){
       const opts = [];
       for(let i=1;i<=35;i++){ const v=String(resp.skill[i]); if(v==='3'||v==='4') opts.push({i, q:SKILL_QUESTIONS[i-1]}); }
       if(!opts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 3 atau 4.</p>';
-      return opts.map(o=>`<label class="radio-line"><input type="checkbox" data-devarea-q="${o.i}" value="${esc(o.q)}" ${refl.devAreas.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+      return opts.map(o=>`<label class="radio-line"><input type="checkbox" data-devarea-q="${o.i}" value="${esc(o.q)}" ${refl.devAreas.includes(o.q)?'checked':''}><span class="rl-num">${o.i}.</span><span class="rl-text">${esc(o.q)}</span></label>`).join('');
     })()}
     </div>
 
@@ -1060,7 +1062,7 @@ function renderMenteeForm(){
       const opts = [];
       for(let i=1;i<=35;i++){ const v=String(resp.skill[i]); if(v==='1'||v==='2') opts.push({i, q:SKILL_QUESTIONS[i-1]}); }
       if(!opts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada skill yang dinilai 1 atau 2.</p>';
-      return opts.map(o=>`<label class="radio-line"><input type="checkbox" data-skillgap-q="${o.i}" value="${esc(o.q)}" ${refl.gaps.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+      return opts.map(o=>`<label class="radio-line"><input type="checkbox" data-skillgap-q="${o.i}" value="${esc(o.q)}" ${refl.gaps.includes(o.q)?'checked':''}><span class="rl-num">${o.i}.</span><span class="rl-text">${esc(o.q)}</span></label>`).join('');
     })()}
     </div>
 
@@ -1096,7 +1098,7 @@ function renderMenteeForm(){
       for(let i=1;i<=15;i++){ if(String(resp.drive[i])==='5') fiveOpts.push({i, q:DRIVE_QUESTIONS[i-1]}); }
       if(!fiveOpts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 5. </p>';
       const selected = Array.isArray(refl.activeDrivers) ? refl.activeDrivers : [];
-      return fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-driver-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+      return fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-driver-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}><span class="rl-num">${o.i}.</span><span class="rl-text">${esc(o.q)}</span></label>`).join('');
     })()}
     </div>
 
@@ -1107,7 +1109,7 @@ function renderMenteeForm(){
       for(let i=1;i<=15;i++){ const v=String(resp.drive[i]); if(v==='3'||v==='4') opts.push({i, q:DRIVE_QUESTIONS[i-1]}); }
       if(!opts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 3 atau 4. </p>';
       const selected = Array.isArray(refl.driversToStrengthen) ? refl.driversToStrengthen : [];
-      return opts.map(o=>`<label class="radio-line"><input type="checkbox" data-strengthen-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+      return opts.map(o=>`<label class="radio-line"><input type="checkbox" data-strengthen-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}><span class="rl-num">${o.i}.</span><span class="rl-text">${esc(o.q)}</span></label>`).join('');
     })()}
     </div>
 
@@ -1118,7 +1120,7 @@ function renderMenteeForm(){
       for(let i=1;i<=15;i++){ const v=String(resp.drive[i]); if(v==='1'||v==='2') opts.push({i, q:DRIVE_QUESTIONS[i-1]}); }
       if(!opts.length) return '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 1 atau 2. </p>';
       const selected = Array.isArray(refl.movementBlockers) ? refl.movementBlockers.map(b=>b.what) : [];
-      return opts.map(o=>`<label class="radio-line"><input type="checkbox" data-blocker-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+      return opts.map(o=>`<label class="radio-line"><input type="checkbox" data-blocker-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}><span class="rl-num">${o.i}.</span><span class="rl-text">${esc(o.q)}</span></label>`).join('');
     })()}
     </div>
     <div id="blocker-notes">
@@ -1304,7 +1306,7 @@ function updateDriverChecklist(resp){
   for(let i=1;i<=15;i++){ if(String(resp.drive[i])==='5') fiveOpts.push({i, q:DRIVE_QUESTIONS[i-1]}); }
   const selected = Array.isArray(resp.reflections.activeDrivers) ? resp.reflections.activeDrivers : [];
   if(!fiveOpts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 5. </p>'; return; }
-  container.innerHTML = fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-driver-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+  container.innerHTML = fiveOpts.map(o=>`<label class="radio-line"><input type="checkbox" data-driver-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}><span class="rl-num">${o.i}.</span><span class="rl-text">${esc(o.q)}</span></label>`).join('');
 }
 
 function updateStrengthenChecklist(resp){
@@ -1314,7 +1316,7 @@ function updateStrengthenChecklist(resp){
   for(let i=1;i<=15;i++){ const v=String(resp.drive[i]); if(v==='3'||v==='4') opts.push({i, q:DRIVE_QUESTIONS[i-1]}); }
   const selected = Array.isArray(resp.reflections.driversToStrengthen) ? resp.reflections.driversToStrengthen : [];
   if(!opts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 3 atau 4. </p>'; return; }
-  container.innerHTML = opts.map(o=>`<label class="radio-line"><input type="checkbox" data-strengthen-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+  container.innerHTML = opts.map(o=>`<label class="radio-line"><input type="checkbox" data-strengthen-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}><span class="rl-num">${o.i}.</span><span class="rl-text">${esc(o.q)}</span></label>`).join('');
 }
 
 function updateBlockerChecklist(resp){
@@ -1325,7 +1327,7 @@ function updateBlockerChecklist(resp){
   const blockers = Array.isArray(resp.reflections.movementBlockers) ? resp.reflections.movementBlockers : [];
   const selected = blockers.map(b=>b.what);
   if(!opts.length){ container.innerHTML = '<p style="font-size:13px;color:var(--ink-mute);">Belum ada drive yang dinilai 1 atau 2. </p>'; return; }
-  container.innerHTML = opts.map(o=>`<label class="radio-line"><input type="checkbox" data-blocker-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}> ${o.i}. ${esc(o.q)}</label>`).join('');
+  container.innerHTML = opts.map(o=>`<label class="radio-line"><input type="checkbox" data-blocker-q="${o.i}" value="${esc(o.q)}" ${selected.includes(o.q)?'checked':''}><span class="rl-num">${o.i}.</span><span class="rl-text">${esc(o.q)}</span></label>`).join('');
   renderBlockerNotes(resp);
 }
 

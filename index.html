@@ -2400,6 +2400,8 @@ document.getElementById('auth-show-login').addEventListener('click', ()=>{
   document.getElementById('auth-login-form').style.display = 'block';
 });
 
+let signupInProgress = false;
+
 document.getElementById('auth-login-btn').addEventListener('click', async ()=>{
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
@@ -2415,6 +2417,7 @@ document.getElementById('auth-login-btn').addEventListener('click', async ()=>{
 });
 
 document.getElementById('auth-signup-btn').addEventListener('click', async ()=>{
+  signupInProgress = true;
   const fullName = document.getElementById('auth-signup-name').value.trim();
   const email = document.getElementById('auth-signup-email').value.trim();
   const password = document.getElementById('auth-signup-password').value;
@@ -2482,8 +2485,10 @@ document.getElementById('auth-signup-btn').addEventListener('click', async ()=>{
       });
     }
 
+    signupInProgress = false;
     // onAuthStateChanged will handle the rest
   }catch(e){
+    signupInProgress = false;
     errEl.textContent = e.message || 'Sign up failed.';
   }
 });
@@ -2597,16 +2602,13 @@ if(linkMentee && linkRound){
 
     // User is signed in — load their role
     try{
+      // Wait for signup handler to finish writing docs if signup is in progress
+      while(signupInProgress){ await new Promise(r=>setTimeout(r, 200)); }
+
       const userDoc = await db.collection('users').doc(user.uid).get();
       if(!userDoc.exists){
-        // No user doc — could be the first leadership user (bootstrap)
-        // Create as leadership by default if no users collection exists
-        await db.collection('users').doc(user.uid).set({
-          email: user.email,
-          role: 'leadership'
-        });
-        await loadAllFromFirestore();
-        bootApp('leadership', null);
+        console.error('No user document found for', user.uid);
+        toast('Account setup incomplete. Please sign out and try again.');
         return;
       }
 

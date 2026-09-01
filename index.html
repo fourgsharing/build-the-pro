@@ -1049,7 +1049,7 @@ function buildFormNav(page, total){
       : `<div></div>`}
     <div class="page-indicator">
       <div class="page-dots">${Array.from({length:total},(_,i)=>`<span class="page-dot${i+1===page?' dot-active':''}" data-goto-page="${i+1}" title="${FORM_PAGE_TITLES[i]}"></span>`).join('')}</div>
-      <span>${page} / ${total}</span>
+      <span class="page-num">${page} of ${total}</span>
     </div>
     ${page < total
       ? `<button class="btn btn-primary" data-goto-page="${page + 1}">Next &rarr;</button>`
@@ -1070,8 +1070,8 @@ function goToFormPage(page){
     dot.classList.toggle('dot-active', Number(dot.dataset.gotoPage) === page);
   });
   // Update page number text
-  container.querySelectorAll('.page-indicator span:last-child').forEach(s => {
-    s.textContent = `${page} / ${pages.length}`;
+  container.querySelectorAll('.page-num').forEach(s => {
+    s.textContent = `${page} of ${pages.length}`;
   });
   // Scroll to top of form
   const formTop = container.closest('.container') || container;

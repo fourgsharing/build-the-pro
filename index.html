@@ -1209,7 +1209,7 @@ function renderMenteeForm(){
         </div>
         <label style="font-size:10.5px;color:var(--ink-mute);text-transform:uppercase;display:block;margin:8px 0 3px;">Biggest gap</label>
         <textarea rows="2" data-devp="gap" data-idx="${i}" placeholder="Gap terbesar...">${esc(p.gap)}</textarea>
-        <label style="font-size:10.5px;color:var(--ink-mute);text-transform:uppercase;display:block;margin:8px 0 3px;">What I want this person to be able to do by November</label>
+        <label style="font-size:10.5px;color:var(--ink-mute);text-transform:uppercase;display:block;margin:8px 0 3px;">What I want this person to be able to do after build the pro</label>
         ${[0,1,2].map(j=>`<input type="text" class="target-input" data-devp-target="${j}" data-idx="${i}" value="${esc(p.targets[j])}" placeholder="${j+1}.">`).join('')}
       </div>`;
     }).join('')}

@@ -1211,46 +1211,10 @@ function renderMenteeForm(){
     <button type="button" id="add-person-btn" style="margin-top:12px;padding:8px 18px;border:1px dashed var(--border);border-radius:var(--radius-card);background:var(--surface);color:var(--ink-mute);cursor:pointer;font-size:13.5px;width:100%;${visiblePeople>=3?'display:none':''}">+ Tambah orang</button>
   </div></div>`;
 
-  // ---- Final Commitment ----
-  const menteeForCommit = MENTEES.find(m=>m.id===menteeState.id);
-  const mentorForCommit = mentorOf(menteeState.id);
-  html += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Final Commitment</h3></div></div><div class="card-body">
-    <div class="field-label">I WILL STOP... — kebiasaan/perilaku apa yang harus saya hentikan? <span class="req">*</span></div>
-    <textarea rows="2" data-refl-single="commitStop" placeholder="...">${esc(refl.commitStop)}</textarea>
-    <div class="field-label">I WILL START... — kebiasaan/perilaku apa yang harus saya mulai? <span class="req">*</span></div>
-    <textarea rows="2" data-refl-single="commitStart" placeholder="...">${esc(refl.commitStart)}</textarea>
-    <div class="field-label">I WILL CONTINUE... — kekuatan apa yang harus terus saya pertahankan? <span class="req">*</span></div>
-    <textarea rows="2" data-refl-single="commitContinue" placeholder="...">${esc(refl.commitContinue)}</textarea>
-
-    <div class="field-label" style="margin-top:20px;">Tanda Tangan <span class="req">*</span></div>
-    <div class="sig-container">
-      <canvas id="sig-canvas" class="sig-canvas" width="800" height="320"></canvas>
-      <div class="sig-actions">
-        <button type="button" id="sig-clear">Hapus</button>
-        <label for="sig-upload">Upload gambar</label>
-        <input type="file" id="sig-upload" accept="image/*" style="display:none;">
-      </div>
-    </div>
-
-    <div style="margin-top:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);font-size:13px;color:var(--ink-mute);">
-      <div><b>Nama Participant:</b> ${esc(menteeForCommit.name)}</div>
-      <div><b>Mentor:</b> ${esc(mentorForCommit.name)}</div>
-      <div><b>Tanggal:</b> <span id="commit-date">${new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}</span></div>
-    </div>
-
-    <button type="button" class="generate-cert-btn" id="generate-cert">Download Final Commitment</button>
-  </div></div>`;
-
   container.innerHTML = html;
   wireMenteeForm(resp);
-  wireSignaturePad(resp);
-  wireGenerateCert(resp);
   updateMenteeProgress(resp);
   applyFormLockState(resp);
-
-  // Ensure generate button stays enabled even when form is locked
-  const genBtn = document.getElementById('generate-cert');
-  if(genBtn) genBtn.disabled = false;
 
   // Floating skill scale legend
   setupSkillScaleFloat();
@@ -2122,13 +2086,6 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
         ${refl.primaryPriority90?`<p><b>Primary:</b> ${esc(refl.primaryPriority90)}</p>`:''}
         ${refl.priorityWhy?`<p style="color:var(--ink-mute);font-size:12.5px;">Why: ${esc(refl.priorityWhy)}</p>`:''}
         ${refl.prioritySuccess?`<p style="color:var(--ink-mute);font-size:12.5px;">Success: ${esc(refl.prioritySuccess)}</p>`:''}
-      </div>
-      <div class="refl-block"><h4>Final commitment</h4>
-        ${refl.commitStop||refl.commitStart||refl.commitContinue ? `
-          <p><b>Stop:</b> ${esc(refl.commitStop)||'—'}</p>
-          <p><b>Start:</b> ${esc(refl.commitStart)||'—'}</p>
-          <p><b>Continue:</b> ${esc(refl.commitContinue)||'—'}</p>
-        ` : '<p class="empty-line">Not filled in.</p>'}
       </div>
     </div>
     <div class="refl-block"><h4>Who I'm developing this round</h4>

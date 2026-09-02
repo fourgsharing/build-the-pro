@@ -1083,9 +1083,22 @@ function buildFormNav(page, total){
   </div>`;
 }
 
-function validatePageChecklist(pageEl){
-  // For each checklist that requires exactly 3 selections when >3 options exist
-  const checks = [
+function validatePage(pageEl){
+  const missing = [];
+
+  // 1. Scale radio buttons (skill/drive) — check each question row
+  pageEl.querySelectorAll('.q-row').forEach(row => {
+    const radios = row.querySelectorAll('input[type="radio"]');
+    if(radios.length && ![...radios].some(r => r.checked)){
+      row.classList.add('missing');
+      missing.push(row);
+    } else {
+      row.classList.remove('missing');
+    }
+  });
+
+  // 2. Checklists that require exactly 3 when >3 options exist
+  const checklistChecks = [
     {sel:'input[data-strength-q]', label:'My Strengths'},
     {sel:'input[data-devarea-q]', label:'My Development Areas'},
     {sel:'input[data-skillgap-q]', label:'My Skill Gaps'},
@@ -1093,14 +1106,59 @@ function validatePageChecklist(pageEl){
     {sel:'input[data-strengthen-q]', label:'My Driver to Strengthen'},
     {sel:'input[data-blocker-q]', label:'My Movement Blocker'},
   ];
-  const errors = [];
-  checks.forEach(c=>{
+  const checklistErrors = [];
+  checklistChecks.forEach(c => {
     const all = pageEl.querySelectorAll(c.sel);
-    if(all.length <= 3) return; // 3 or fewer options — no need to enforce exactly 3
-    const checked = [...all].filter(el=>el.checked).length;
-    if(checked !== 3) errors.push(`${c.label}: pilih tepat 3 (saat ini ${checked} dipilih)`);
+    if(all.length <= 3) return;
+    const checked = [...all].filter(el => el.checked).length;
+    if(checked !== 3) checklistErrors.push(`${c.label}: pilih tepat 3 (saat ini ${checked} dipilih)`);
   });
-  return errors;
+
+  // 3. Required textareas and text inputs (data-refl-single)
+  pageEl.querySelectorAll('textarea[data-refl-single], input[data-refl-single]').forEach(el => {
+    if(el.style.display === 'none') return; // skip conditionally hidden
+    el.classList.remove('field-missing');
+    if(!el.value.trim()){ el.classList.add('field-missing'); missing.push(el); }
+  });
+
+  // 4. Radio groups (data-drv-radio)
+  const seenGroups = new Set();
+  pageEl.querySelectorAll('[data-drv-radio]').forEach(el => {
+    if(seenGroups.has(el.name)) return;
+    seenGroups.add(el.name);
+    const anyChecked = [...pageEl.querySelectorAll(`[data-drv-radio][name="${el.name}"]`)].some(g => g.checked);
+    if(!anyChecked) missing.push(el);
+  });
+
+  // 5. Barrier checkboxes (at least one)
+  const barrierEls = pageEl.querySelectorAll('[data-barrier]');
+  if(barrierEls.length && ![...barrierEls].some(b => b.checked)){
+    missing.push(barrierEls[0]);
+  }
+
+  // 6. Priority checkboxes (at least one)
+  const priorityEls = pageEl.querySelectorAll('[data-priority90]');
+  if(priorityEls.length && ![...priorityEls].some(b => b.checked)){
+    missing.push(priorityEls[0]);
+  }
+
+  // 7. Develop people — at least person 1 must be filled
+  const personBlocks = pageEl.querySelectorAll('.develop-person-block:not(.person-hidden)');
+  personBlocks.forEach((block, i) => {
+    const nameInput = block.querySelector('input[data-devp="name"]');
+    if(i === 0 || (nameInput && nameInput.value.trim())){
+      block.querySelectorAll('input[data-devp], select[data-devp], textarea[data-devp]').forEach(f => {
+        f.classList.remove('field-missing');
+        if(!f.value.trim()){ f.classList.add('field-missing'); missing.push(f); }
+      });
+    }
+  });
+
+  // Build error message
+  const errors = [];
+  if(missing.length) errors.push(`${missing.length} field${missing.length>1?'s':''} belum diisi`);
+  errors.push(...checklistErrors);
+  return {errors, firstMissing: missing[0] || null};
 }
 
 function goToFormPage(page){
@@ -1111,9 +1169,10 @@ function goToFormPage(page){
   // Validate current page when going forward
   if(page > currentFormPage){
     const currentPageEl = container.querySelector(`.form-page[data-page="${currentFormPage}"]`);
-    const errors = validatePageChecklist(currentPageEl);
+    const {errors, firstMissing} = validatePage(currentPageEl);
     if(errors.length){
       toast(errors.join('. ') + '.');
+      if(firstMissing) firstMissing.scrollIntoView({behavior:'smooth', block:'center'});
       return;
     }
   }

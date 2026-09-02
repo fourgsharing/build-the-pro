@@ -1339,6 +1339,14 @@ function goToFormPage(page){
   }
 
   currentFormPage = page;
+
+  // Refresh summary when navigating to page 8
+  if(page === 8){
+    const resp = getResponse(menteeState.id, menteeState.round);
+    const summaryEl = document.getElementById('summary-content');
+    if(summaryEl) summaryEl.innerHTML = buildSummaryHtml(resp);
+  }
+
   pages.forEach(p => {
     p.classList.toggle('active-page', Number(p.dataset.page) === page);
   });

@@ -1110,12 +1110,12 @@ function buildSummaryHtml(resp){
   let h = '';
 
   h += `<div class="summary-wrap">`;
-  h += `<div class="card"><div class="card-body" style="text-align:center;padding:20px;">
-    <h2 style="margin:0 0 4px;">Build The Pro — Growth Tracker</h2>
-    <p style="margin:0;color:var(--ink-mute);font-size:14px;">
+  h += `<div class="summary-header" style="text-align:center;padding:10px 0 6px;">
+    <h2 style="margin:0 0 2px;font-size:18px;">Build The Pro — Growth Tracker</h2>
+    <p style="margin:0;color:var(--ink-mute);font-size:13px;">
       ${esc(mentee?mentee.name:'')} ${mentor?'• Mentor: '+esc(mentor.name):''} ${round?'• Round: '+esc(round.short):''}
     </p>
-  </div></div>`;
+  </div>`;
 
   // Reflection: Strengths & Gaps
   h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Strengths &amp; Gaps</h3></div></div><div class="card-body">`;

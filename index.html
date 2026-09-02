@@ -271,6 +271,24 @@
   .radio-line .rl-num{ font-family:var(--font-mono); color:var(--ink-mute); font-size:11.5px; flex:none; min-width:22px; text-align:right; }
   .radio-line .rl-text{ flex:1 1 auto; min-width:0; }
   .radio-line:has(input[type="checkbox"]:checked){ background:#fb8c00; border-radius:4px; padding:2px 6px; margin-left:-6px; color:#fff; }
+  .summary-wrap .card{ margin-bottom:12px; }
+  .summary-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  .summary-table td{ padding:4px 8px; border-bottom:1px solid var(--border); vertical-align:top; }
+  .summary-qnum{ width:30px; color:var(--ink-mute); text-align:right; font-family:var(--font-mono); }
+  .summary-qtxt{ }
+  .summary-val{ width:40px; text-align:center; font-weight:600; font-family:var(--font-mono); }
+  .summary-list{ margin:4px 0 14px 20px; font-size:13px; }
+  .summary-list li{ margin-bottom:3px; }
+  .summary-answer{ font-size:13.5px; margin:2px 0 14px; padding:6px 10px; background:var(--surface); border-radius:var(--radius-card); border:1px solid var(--border); }
+  .summary-sub{ margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+  .summary-sub:last-child{ border-bottom:none; margin-bottom:0; }
+  @media print {
+    body *{ visibility:hidden; }
+    #summary-content, #summary-content *{ visibility:visible; }
+    #summary-content{ position:absolute; left:0; top:0; width:100%; }
+    .no-print-hide, .form-nav, .save-bar, .mentee-toolbar, #mentee-already-note{ display:none !important; }
+    .summary-wrap .card{ break-inside:avoid; box-shadow:none; border:1px solid #ddd; }
+  }
   .radio-group{ margin-bottom:4px; }
   .checklist-grid{ display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; margin-bottom:10px; }
   @media (max-width:560px){ .checklist-grid{ grid-template-columns:1fr; } }
@@ -1065,9 +1083,143 @@ const FORM_PAGE_TITLES = [
   'Reflection: Drivers',
   'From "I Can" to "I Will"',
   'My 90-Day Priority',
-  'Who Will Become Better'
+  'Who Will Become Better',
+  'Summary'
 ];
 let currentFormPage = 1;
+
+function buildSummaryHtml(resp){
+  const refl = resp.reflections;
+  const mentee = MENTEES.find(m=>m.id===menteeState.id);
+  const mentor = mentee ? mentorOf(mentee.id) : null;
+  const round = ROUNDS.find(r=>r.key===menteeState.round);
+  let h = '';
+
+  h += `<div class="summary-wrap">`;
+  h += `<div class="card"><div class="card-body" style="text-align:center;padding:20px;">
+    <h2 style="margin:0 0 4px;">Build The Pro — Growth Tracker</h2>
+    <p style="margin:0;color:var(--ink-mute);font-size:14px;">
+      ${esc(mentee?mentee.name:'')} ${mentor?'• Mentor: '+esc(mentor.name):''} ${round?'• Round: '+esc(round.short):''}
+    </p>
+  </div></div>`;
+
+  // Part 1: Skill scores
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Part 1</div><h3>What Can I Really Do? — Skill Scores</h3></div></div><div class="card-body">`;
+  SKILL_SECTIONS.forEach(sec=>{
+    h += `<div class="q-section-title">${esc(sec.title)}</div>`;
+    h += `<table class="summary-table"><tbody>`;
+    for(let i=sec.from;i<=sec.to;i++){
+      const v = resp.skill[i] || '—';
+      h += `<tr><td class="summary-qnum">${i}.</td><td class="summary-qtxt">${esc(SKILL_QUESTIONS[i-1])}</td><td class="summary-val">${esc(v)}</td></tr>`;
+    }
+    h += `</tbody></table>`;
+  });
+  h += `</div></div>`;
+
+  // Reflection: Strengths & Gaps
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Strengths &amp; Gaps</h3></div></div><div class="card-body">`;
+  h += `<div class="field-label">MY STRENGTHS</div><ul class="summary-list">${(refl.strengths||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
+  h += `<div class="field-label">MY DEVELOPMENT AREAS</div><ul class="summary-list">${(refl.devAreas||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
+  h += `<div class="field-label">MY SKILL GAPS</div><ul class="summary-list">${(refl.gaps||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
+  h += `<div class="field-label">Aktivitas yang sudah dikuasai dengan baik</div><p class="summary-answer">${esc(refl.lastQ1||'—')}</p>`;
+  h += `<div class="field-label">Aktivitas yang masih butuh bantuan</div><p class="summary-answer">${esc(refl.lastQ2||'—')}</p>`;
+  h += `<div class="field-label">3 kemampuan paling berdampak untuk 90 hari</div><p class="summary-answer">${esc(refl.lastQ3||'—')}</p>`;
+  h += `</div></div>`;
+
+  // Part 2: Drive scores
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Part 2</div><h3>What Makes Me Move? — Drive Scores</h3></div></div><div class="card-body">`;
+  DRIVE_SECTIONS.forEach(sec=>{
+    h += `<div class="q-section-title">${esc(sec.title)}</div>`;
+    h += `<table class="summary-table"><tbody>`;
+    for(let i=sec.from;i<=sec.to;i++){
+      const v = resp.drive[i] || '—';
+      h += `<tr><td class="summary-qnum">${i}.</td><td class="summary-qtxt">${esc(DRIVE_QUESTIONS[i-1])}</td><td class="summary-val">${esc(v)}</td></tr>`;
+    }
+    h += `</tbody></table>`;
+  });
+  h += `</div></div>`;
+
+  // Reflection: Drivers
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Drivers</h3></div></div><div class="card-body">`;
+  h += `<div class="field-label">MY ACTIVE DRIVERS</div><ul class="summary-list">${(refl.activeDrivers||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
+  h += `<div class="field-label">DRIVERS TO STRENGTHEN</div><ul class="summary-list">${(refl.driversToStrengthen||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
+  h += `<div class="field-label">MOVEMENT BLOCKERS</div>`;
+  const blockers = Array.isArray(refl.movementBlockers) ? refl.movementBlockers : [];
+  if(blockers.length){
+    blockers.forEach(b=>{
+      h += `<div class="summary-sub"><strong>${esc(b.what||'')}</strong><p class="summary-answer">${esc(b.note||'—')}</p></div>`;
+    });
+  } else { h += `<p class="summary-answer">—</p>`; }
+  const driveTypeMap = {a:'Internal Drive', b:'Mixed Drive', c:'External Drive'};
+  h += `<div class="field-label">Drive Type</div><p class="summary-answer">${esc(driveTypeMap[refl.driveType]||'—')}</p>`;
+  if(refl.driveTypeExplain) h += `<p class="summary-answer" style="margin-top:-8px;">${esc(refl.driveTypeExplain)}</p>`;
+  h += `<div class="field-label">Tetap bergerak tanpa mission/hadiah/mentor?</div><p class="summary-answer">${refl.commitAnswer==='yes'?'YES':'NOT YET'}${refl.commitExplain?' — '+esc(refl.commitExplain):''}</p>`;
+  h += `</div></div>`;
+
+  // From "I Can" to "I Will"
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>From "I Can" to "I Will"</h3></div></div><div class="card-body">`;
+  h += `<div class="field-label">Barriers</div><ul class="summary-list">`;
+  BARRIER_OPTIONS.forEach((label,i)=>{ if(refl.barriers[i]) h += `<li>${esc(label)}</li>`; });
+  if(refl.barrierOther) h += `<li>Lainnya: ${esc(refl.barrierOther)}</li>`;
+  h += `</ul>`;
+  h += `<div class="field-label">My Biggest Internal Barrier</div><p class="summary-answer">${esc(refl.biggestBarrier||'—')}</p>`;
+  h += `<div class="field-label">Konsekuensi jika tidak berubah (12 bulan)</div><p class="summary-answer">${esc(refl.barrierConsequence||'—')}</p>`;
+  h += `</div></div>`;
+
+  // My 90-Day Priority
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>My 90-Day Priority</h3></div></div><div class="card-body">`;
+  h += `<div class="field-label">Priorities</div><ul class="summary-list">${(refl.priorities90||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
+  h += `<div class="field-label">Primary Priority</div><p class="summary-answer">${esc(refl.primaryPriority90||'—')}</p>`;
+  h += `<div class="field-label">Why?</div><p class="summary-answer">${esc(refl.priorityWhy||'—')}</p>`;
+  h += `<div class="field-label">What Would Success Look Like?</div>`;
+  h += `<table class="summary-table"><tbody>`;
+  h += `<tr><td class="summary-qtxt">Tambahan jalur aktif</td><td class="summary-val">${esc(refl.successJalur||'—')}</td></tr>`;
+  h += `<tr><td class="summary-qtxt">Tambahan orang aktif</td><td class="summary-val">${esc(refl.successOrangAktif||'—')}</td></tr>`;
+  h += `<tr><td class="summary-qtxt">Tambahan trainer</td><td class="summary-val">${esc(refl.successTrainer||'—')}</td></tr>`;
+  h += `<tr><td class="summary-qtxt">Omzet</td><td class="summary-val">${esc(refl.successOmzet||'—')}</td></tr>`;
+  h += `<tr><td class="summary-qtxt">Peringkat</td><td class="summary-val">${esc(refl.successPeringkat||'—')}</td></tr>`;
+  h += `</tbody></table>`;
+  h += `</div></div>`;
+
+  // Dream
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Dream</h3></div></div><div class="card-body">`;
+  h += `<div class="field-label">Kapan terakhir membuka buku impian?</div><p class="summary-answer">${esc(refl.dreamLastViewed||'—')}</p>`;
+  h += `<div class="field-label">Apakah masih menggerakkan?</div><p class="summary-answer">${esc(refl.dreamStillMoves||'—')}</p>`;
+  h += `<div class="field-label">Kehidupan 3-5 tahun ke depan</div><p class="summary-answer">${esc(refl.dreamLife3to5||'—')}</p>`;
+  h += `<div class="field-label">Mengapa penting?</div><p class="summary-answer">${esc(refl.dreamWhyImportant||'—')}</p>`;
+  h += `<div class="field-label">Apa yang berubah?</div><p class="summary-answer">${esc(refl.dreamWhatChanges||'—')}</p>`;
+  h += `</div></div>`;
+
+  // Who Will Become Better
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Who Will Become Better Because of Me?</h3></div></div><div class="card-body">`;
+  const people = refl.developPeople || [];
+  people.forEach((p,i)=>{
+    if(!p.name) return;
+    h += `<div class="summary-sub"><h4>Person ${i+1}: ${esc(p.name)}</h4>`;
+    h += `<p style="font-size:13px;margin:2px 0;"><strong>Category:</strong> ${esc(p.category||'—')}</p>`;
+    const conds = Array.isArray(p.conditions) ? p.conditions : [];
+    if(conds.length || p.conditionOther) {
+      h += `<p style="font-size:13px;margin:2px 0;"><strong>Current condition:</strong> ${[...conds.map(c=>esc(c)), p.conditionOther?'Lain-lain: '+esc(p.conditionOther):''].filter(Boolean).join(', ')}</p>`;
+    }
+    h += `<p style="font-size:13px;margin:2px 0;"><strong>Biggest gap:</strong> ${esc(p.gap||'—')}</p>`;
+    const targets = (p.targets||[]).filter(t=>t);
+    if(targets.length){
+      h += `<p style="font-size:13px;margin:2px 0;"><strong>Targets:</strong></p><ol class="summary-list">${targets.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>`;
+    }
+    h += `</div>`;
+  });
+  h += `</div></div>`;
+
+  // Commitment
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Commitment</div><h3>Stop / Start / Continue</h3></div></div><div class="card-body">`;
+  h += `<div class="field-label">I will STOP</div><p class="summary-answer">${esc(refl.commitStop||'—')}</p>`;
+  h += `<div class="field-label">I will START</div><p class="summary-answer">${esc(refl.commitStart||'—')}</p>`;
+  h += `<div class="field-label">I will CONTINUE</div><p class="summary-answer">${esc(refl.commitContinue||'—')}</p>`;
+  h += `</div></div>`;
+
+  h += `</div>`; // close summary-wrap
+  return h;
+}
 
 function buildFormNav(page, total){
   return `<div class="form-nav">
@@ -1175,8 +1327,8 @@ function goToFormPage(page){
   const pages = container.querySelectorAll('.form-page');
   if(page < 1 || page > pages.length) return;
 
-  // Validate current page when going forward
-  if(page > currentFormPage){
+  // Validate current page when going forward (skip validation when leaving summary page)
+  if(page > currentFormPage && currentFormPage < 8){
     const currentPageEl = container.querySelector(`.form-page[data-page="${currentFormPage}"]`);
     const {errors, firstMissing} = validatePage(currentPageEl);
     if(errors.length){
@@ -1232,7 +1384,7 @@ function renderMenteeForm(){
     }
   });
   html += `</div></div>`;
-  html += buildFormNav(1, 7);
+  html += buildFormNav(1, 8);
   html += `</div>`;
 
   // ---- Page 2: Reflection: Strengths & Gaps ----
@@ -1277,7 +1429,7 @@ function renderMenteeForm(){
     <p style="font-size:12.5px;color:var(--ink-mute);margin:10px 0 4px;">Jika saya hanya boleh meningkatkan tiga kemampuan selama 90 hari, kemampuan apa yang paling berdampak?</p>
     <textarea rows="2" data-refl-single="lastQ3">${esc(refl.lastQ3)}</textarea>
   </div></div>`;
-  html += buildFormNav(2, 7);
+  html += buildFormNav(2, 8);
   html += `</div>`;
 
   // ---- Page 3: Part 2: Drive ----
@@ -1294,7 +1446,7 @@ function renderMenteeForm(){
     }
   });
   html += `</div></div>`;
-  html += buildFormNav(3, 7);
+  html += buildFormNav(3, 8);
   html += `</div>`;
 
   // ---- Page 4: Reflection: Drivers ----
@@ -1357,7 +1509,7 @@ function renderMenteeForm(){
     </div>
     <textarea rows="2" data-refl-single="commitExplain" placeholder="Jelaskan...">${esc(refl.commitExplain)}</textarea>
   </div></div>`;
-  html += buildFormNav(4, 7);
+  html += buildFormNav(4, 8);
   html += `</div>`;
 
   // ---- Page 5: From "I Can" to "I Will" ----
@@ -1376,7 +1528,7 @@ function renderMenteeForm(){
     <div class="field-label">Kalau saya tidak mengubah ini, apa yang kemungkinan terjadi pada bisnis saya 12 bulan ke depan? <span class="req">*</span></div>
     <textarea rows="2" data-refl-single="barrierConsequence" placeholder="...">${esc(refl.barrierConsequence)}</textarea>
   </div></div>`;
-  html += buildFormNav(5, 7);
+  html += buildFormNav(5, 8);
   html += `</div>`;
 
   // ---- Page 6: My 90-Day Priority ----
@@ -1408,7 +1560,7 @@ function renderMenteeForm(){
     <label style="font-size:13px;display:block;margin:10px 0 4px;">Peringkat?</label>
     <input type="text" data-refl-single="successPeringkat" value="${esc(refl.successPeringkat||'')}" placeholder="...">
   </div></div>`;
-  html += buildFormNav(6, 7);
+  html += buildFormNav(6, 8);
   html += `</div>`;
 
   // ---- Page 7: Who Will Become Better Because of Me? ----
@@ -1443,7 +1595,18 @@ function renderMenteeForm(){
     </div>
     <button type="button" id="add-person-btn" style="margin-top:12px;padding:8px 18px;border:1px dashed var(--border);border-radius:var(--radius-card);background:var(--surface);color:var(--ink-mute);cursor:pointer;font-size:13.5px;width:100%;${visiblePeople>=3?'display:none':''}">+ Tambah orang</button>
   </div></div>`;
-  html += buildFormNav(7, 7);
+  html += buildFormNav(7, 8);
+  html += `</div>`;
+
+  // ---- Page 8: Summary ----
+  html += `<div class="form-page" data-page="8">`;
+  html += `<div style="display:flex;justify-content:flex-end;margin-bottom:12px;" class="no-print-hide">
+    <button type="button" class="btn btn-primary" id="download-summary-pdf">📄 Download PDF</button>
+  </div>`;
+  html += `<div id="summary-content">`;
+  html += buildSummaryHtml(resp);
+  html += `</div>`;
+  html += buildFormNav(8, 8);
   html += `</div>`;
 
   container.innerHTML = html;
@@ -1753,6 +1916,14 @@ function wireMenteeForm(resp){
       }
     });
   });
+
+  // Download PDF button
+  const pdfBtn = document.getElementById('download-summary-pdf');
+  if(pdfBtn){
+    pdfBtn.addEventListener('click', ()=>{
+      window.print();
+    });
+  }
 }
 
 function clearMissingOnInput(t){

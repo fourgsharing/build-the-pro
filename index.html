@@ -1953,10 +1953,14 @@ function wireMenteeForm(resp){
   if(pdfBtn){
     pdfBtn.addEventListener('click', ()=>{
       const content = document.getElementById('summary-content');
-      const header = document.querySelector('.summary-header');
       if(!content) return;
-      const win = window.open('', '_blank');
-      win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Build The Pro — Summary</title>
+      const printFrame = document.getElementById('print-frame') || document.createElement('iframe');
+      printFrame.id = 'print-frame';
+      printFrame.style.cssText = 'position:fixed;left:-9999px;top:0;width:0;height:0;border:none;';
+      document.body.appendChild(printFrame);
+      const doc = printFrame.contentDocument || printFrame.contentWindow.document;
+      doc.open();
+      doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Build The Pro — Summary</title>
         <style>
           body{font-family:system-ui,-apple-system,sans-serif;margin:20px;color:#1B1F1A;font-size:13.5px;line-height:1.5;}
           .card{border:1px solid #ddd;border-radius:8px;margin-bottom:10px;break-inside:avoid;overflow:hidden;}
@@ -1975,16 +1979,12 @@ function wireMenteeForm(resp){
           .success-table td{padding:2px 0;}
           .success-table td:first-child{padding-right:12px;}
           .success-table td:last-child{font-weight:600;}
-          .summary-header{text-align:center;padding:0 0 10px;}
-          .summary-header h2{margin:0 0 2px;font-size:18px;}
-          .summary-header p{margin:0;color:#888;font-size:13px;}
           strong{font-weight:600;}
         </style></head><body>`);
-      if(header) win.document.write(header.outerHTML);
-      win.document.write(content.innerHTML);
-      win.document.write('</body></html>');
-      win.document.close();
-      setTimeout(()=>{ win.print(); }, 300);
+      doc.write(content.innerHTML);
+      doc.write('</body></html>');
+      doc.close();
+      setTimeout(()=>{ printFrame.contentWindow.print(); }, 300);
     });
   }
 }

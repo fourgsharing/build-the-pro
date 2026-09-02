@@ -422,7 +422,9 @@
   .ans-badge.drive{ background:var(--accent-drive); color:var(--accent-drive-ink); }
   .ans-badge.empty{ background:var(--surface-2); color:var(--ink-mute); border:1.5px dashed var(--border); }
 
-  .refl-block{ margin-bottom:16px; }
+  .refl-block{ margin-bottom:16px; padding:10px 14px; background:#e3f2fd; border-radius:var(--radius-card); border:1px solid #bbdefb; }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .refl-block{ background:#1a3a5c; border-color:#2a5a8c; } }
+  :root[data-theme="dark"] .refl-block{ background:#1a3a5c; border-color:#2a5a8c; }
   .refl-block h4{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-mute); margin-bottom:7px; }
   .refl-block ul{ margin:0; padding-left:18px; }
   .refl-block li{ font-family:var(--font-serif); font-size:14px; margin-bottom:4px; }

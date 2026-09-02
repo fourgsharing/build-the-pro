@@ -995,8 +995,8 @@ document.querySelectorAll('.role-switch button').forEach(btn=>{
     const role = btn.dataset.role;
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-'+role).classList.add('active');
-    if(role==='mentor') renderMentor();
-    if(role==='leader') renderLeader();
+    if(role==='mentor'){ loadAllFromFirestore().then(()=>{ populateDropdowns(); renderMentor(); }); }
+    if(role==='leader'){ loadAllFromFirestore().then(()=>{ populateDropdowns(); renderLeader(); }); }
   });
 });
 
@@ -2129,9 +2129,7 @@ function renderMentorManageMentee(){
   });
 }
 
-async function renderMentor(){
-  await loadAllFromFirestore();
-  populateDropdowns();
+function renderMentor(){
   if(!mentorState.mentorId || !MENTORS.some(m=>m.id===mentorState.mentorId)) mentorState.mentorId = MENTORS.length ? MENTORS[0].id : null;
   if(!mentorState.mentorId){ document.getElementById('mentor-manage').innerHTML='<div class="card"><div class="card-body"><p class="empty-line">No mentors yet. Ask leadership to add one.</p></div></div>'; document.getElementById('mentor-roster').innerHTML=''; document.getElementById('mentor-detail').innerHTML=''; return; }
   renderMentorManageMentee();
@@ -2472,9 +2470,7 @@ function renderManagePeople(){
   });
 }
 
-async function renderLeader(){
-  await loadAllFromFirestore();
-  populateDropdowns();
+function renderLeader(){
   renderManagePeople();
   const list = leaderState.mentorFilter==='all' ? MENTEES : menteesOf(leaderState.mentorFilter);
 

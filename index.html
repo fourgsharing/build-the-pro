@@ -2349,18 +2349,19 @@ function armConfirm(btn, msg, onConfirm){
 
 function wireDragReorder(container, selector, arr, collection, dataKey){
   const rows = [...container.querySelectorAll(selector)];
-  let dragId = null;
+  const dragType = 'application/x-drag-' + dataKey;
   rows.forEach(row => {
     row.addEventListener('dragstart', e => {
-      dragId = row.dataset[dataKey];
-      row.classList.add('dragging');
+      e.dataTransfer.setData(dragType, row.dataset[dataKey]);
       e.dataTransfer.effectAllowed = 'move';
+      row.classList.add('dragging');
     });
     row.addEventListener('dragend', () => {
       row.classList.remove('dragging');
       rows.forEach(r => r.classList.remove('drag-over'));
     });
     row.addEventListener('dragover', e => {
+      if(!e.dataTransfer.types.includes(dragType)) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       row.classList.add('drag-over');
@@ -2369,8 +2370,10 @@ function wireDragReorder(container, selector, arr, collection, dataKey){
       row.classList.remove('drag-over');
     });
     row.addEventListener('drop', e => {
+      if(!e.dataTransfer.types.includes(dragType)) return;
       e.preventDefault();
       row.classList.remove('drag-over');
+      const dragId = e.dataTransfer.getData(dragType);
       const targetId = row.dataset[dataKey];
       if(!dragId || dragId === targetId) return;
       const fromIdx = arr.findIndex(m => m.id === dragId);

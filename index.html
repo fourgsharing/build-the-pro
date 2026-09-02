@@ -467,22 +467,7 @@
       <input type="password" id="auth-password" placeholder="Password">
       <button class="btn btn-primary" id="auth-login-btn">Sign In</button>
       <div class="auth-toggle"><a id="auth-forgot-pw" style="cursor:pointer;">Forgot password?</a></div>
-      <div class="auth-toggle">No account? <a id="auth-show-signup">Sign up</a></div>
       <div class="auth-error" id="auth-error"></div>
-    </div>
-
-    <div id="auth-signup-form" style="display:none;">
-      <label for="auth-signup-name">Full Name</label>
-      <input type="text" id="auth-signup-name" placeholder="Your full name">
-      <label for="auth-signup-email">Email</label>
-      <input type="email" id="auth-signup-email" placeholder="you@example.com">
-      <label for="auth-signup-password">Password</label>
-      <input type="password" id="auth-signup-password" placeholder="Password (min 6 characters)">
-      <label for="auth-invite-code">Invite Code <span style="font-weight:400;color:var(--ink-mute);">(leave blank if you're the first user)</span></label>
-      <input type="text" id="auth-invite-code" placeholder="8-character code from leadership (optional for first user)">
-      <button class="btn btn-primary" id="auth-signup-btn">Sign Up</button>
-      <div class="auth-toggle">Already have an account? <a id="auth-show-login">Sign in</a></div>
-      <div class="auth-error" id="auth-signup-error"></div>
     </div>
   </div>
 </div>
@@ -2406,19 +2391,6 @@ function renderManagePeople(){
     </div>
     <p class="hint" style="margin:12px 0 0;">Mentees access their questionnaire through personal links. After adding a mentee, use the 🔗 button to copy their link and share it with them.</p>
 
-    <div style="margin-top:18px;padding:14px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-card);">
-      <div class="field-label" style="margin-top:0;">Invite People</div>
-      <p style="font-size:12.5px;color:var(--ink-mute);margin-bottom:8px;">Generate an invite code so someone can sign up. Choose their role below.</p>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <select id="invite-role" style="font-size:13px;padding:6px 10px;border-radius:6px;border:1px solid var(--border);">
-          <option value="mentor">Mentor</option>
-          <option value="leadership">Leadership</option>
-        </select>
-        <button class="btn btn-primary btn-sm" id="gen-invite-btn">Generate Invite Code</button>
-        <span id="invite-code-display" style="font-family:var(--font-mono);font-size:15px;letter-spacing:.1em;color:var(--accent-skill);font-weight:700;"></span>
-      </div>
-    </div>
-
     <div class="person-list">
       <div class="person-list-title">Existing mentors — click a name to fix a typo</div>
       ${MENTORS.length ? MENTORS.map(m=>`<div class="person-row">
@@ -2465,26 +2437,6 @@ function renderManagePeople(){
     renderLeader();
   });
   wirePersonRows(wrap);
-
-  // Wire invite code generation
-  const genInviteBtn = document.getElementById('gen-invite-btn');
-  if(genInviteBtn) genInviteBtn.addEventListener('click', async ()=>{
-    const code = generateInviteCode();
-    const inviteRole = document.getElementById('invite-role').value;
-    try{
-      await db.collection('invites').doc(code).set({
-        createdBy: auth.currentUser ? auth.currentUser.uid : 'unknown',
-        createdAt: new Date().toISOString(),
-        role: inviteRole,
-        used: false,
-        usedBy: null
-      });
-      document.getElementById('invite-code-display').textContent = code + ' (' + inviteRole + ')';
-      toast('Invite code generated for ' + inviteRole + ': ' + code);
-    }catch(e){
-      toast('Error generating invite: ' + e.message);
-    }
-  });
 
   // Wire copy-link buttons in leadership manage people
   wrap.querySelectorAll('[data-leader-copy-link]').forEach(btn=>{
@@ -2563,15 +2515,6 @@ let currentUserRole = null; // 'leadership' | 'mentor'
 let currentUserMentorId = null; // for mentor role
 
 // ── Auth UI wiring ──
-document.getElementById('auth-show-signup').addEventListener('click', ()=>{
-  document.getElementById('auth-login-form').style.display = 'none';
-  document.getElementById('auth-signup-form').style.display = 'block';
-});
-document.getElementById('auth-show-login').addEventListener('click', ()=>{
-  document.getElementById('auth-signup-form').style.display = 'none';
-  document.getElementById('auth-login-form').style.display = 'block';
-});
-
 document.getElementById('auth-forgot-pw').addEventListener('click', async ()=>{
   const raw = document.getElementById('auth-email').value.trim();
   const errEl = document.getElementById('auth-error');
@@ -2587,8 +2530,6 @@ document.getElementById('auth-forgot-pw').addEventListener('click', async ()=>{
     errEl.textContent = e.message || 'Failed to send reset email.';
   }
 });
-
-let signupInProgress = false;
 
 function toEmail(input){
   input = input.trim().toLowerCase();
@@ -2610,82 +2551,6 @@ document.getElementById('auth-login-btn').addEventListener('click', async ()=>{
   }
 });
 
-document.getElementById('auth-signup-btn').addEventListener('click', async ()=>{
-  signupInProgress = true;
-  const fullName = document.getElementById('auth-signup-name').value.trim();
-  const email = document.getElementById('auth-signup-email').value.trim();
-  const password = document.getElementById('auth-signup-password').value;
-  const inviteCode = document.getElementById('auth-invite-code').value.trim().toUpperCase();
-  const errEl = document.getElementById('auth-signup-error');
-  errEl.textContent = '';
-  if(!fullName || !email || !password){ errEl.textContent = 'Full name, email, and password are required.'; return; }
-
-  try{
-    let assignedRole = 'leadership'; // default for first user
-    let inviteData = null;
-
-    if(inviteCode){
-      // Validate invite code
-      const inviteDoc = await db.collection('invites').doc(inviteCode).get();
-      if(!inviteDoc.exists){ errEl.textContent = 'Invalid invite code.'; return; }
-      inviteData = inviteDoc.data();
-      if(inviteData.used){ errEl.textContent = 'This invite code has already been used.'; return; }
-      assignedRole = inviteData.role || 'mentor';
-    } else {
-      // No invite code — only allowed if no users exist yet (bootstrap)
-      const existingUsers = await db.collection('users').limit(1).get();
-      if(!existingUsers.empty){
-        errEl.textContent = 'Invite code is required. Ask your leadership for one.';
-        return;
-      }
-      // First user ever — becomes leadership
-      assignedRole = 'leadership';
-    }
-
-    // Create auth account
-    const cred = await auth.createUserWithEmailAndPassword(email, password);
-    const uid = cred.user.uid;
-
-    if(assignedRole === 'mentor'){
-      // Create a new mentor record for this user
-      const mentorId = 'mentor-' + slugify(fullName);
-      const finalMentorId = uniqueId(mentorId, MENTORS);
-      await db.collection('mentors').doc(finalMentorId).set({
-        name: fullName,
-        createdAt: new Date().toISOString()
-      });
-
-      await db.collection('users').doc(uid).set({
-        email: email,
-        name: fullName,
-        role: 'mentor',
-        mentorId: finalMentorId
-      });
-    } else {
-      // Leadership — no mentor record needed
-      await db.collection('users').doc(uid).set({
-        email: email,
-        name: fullName,
-        role: 'leadership'
-      });
-    }
-
-    // Mark invite as used (if one was provided)
-    if(inviteCode && inviteData){
-      await db.collection('invites').doc(inviteCode).update({
-        used: true,
-        usedBy: uid,
-        usedAt: new Date().toISOString()
-      });
-    }
-
-    signupInProgress = false;
-    // onAuthStateChanged will handle the rest
-  }catch(e){
-    signupInProgress = false;
-    errEl.textContent = e.message || 'Sign up failed.';
-  }
-});
 
 // ── Sign out ──
 document.getElementById('signout-btn').addEventListener('click', ()=>{
@@ -2693,13 +2558,6 @@ document.getElementById('signout-btn').addEventListener('click', ()=>{
 });
 
 // ── Invite code generation (for leadership) ──
-function generateInviteCode(){
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for(let i=0;i<8;i++) code += chars[Math.floor(Math.random()*chars.length)];
-  return code;
-}
-
 // ── Boot app after data is loaded ──
 function bootApp(role, mentorIdForRole){
   currentUserRole = role;
@@ -2796,9 +2654,6 @@ if(linkMentee && linkRound){
 
     // User is signed in — load their role
     try{
-      // Wait for signup handler to finish writing docs if signup is in progress
-      while(signupInProgress){ await new Promise(r=>setTimeout(r, 200)); }
-
       const userDoc = await db.collection('users').doc(user.uid).get();
       if(!userDoc.exists){
         console.error('No user document found for', user.uid);

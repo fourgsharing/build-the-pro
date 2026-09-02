@@ -291,16 +291,18 @@
   .summary-sub{ margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
   .summary-sub:last-child{ border-bottom:none; margin-bottom:0; }
   @media print {
-    body, html{ margin:0; padding:0; }
-    .topbar, .scale-float, .role-switch, .no-print-hide, .form-nav, .save-bar,
-    .mentee-toolbar, #mentee-already-note, #mentee-stepper,
-    .form-page:not(.active-page), #download-summary-pdf,
-    #mentee-clear-btn, #mentee-submit-btn, #auth-gate,
+    body, html{ margin:0 !important; padding:0 !important; }
+    body > *:not(#view-mentee):not(#view-mentor):not(#view-leader){ display:none !important; }
+    .topbar, .scale-float, #auth-gate{ display:none !important; }
     .view:not(.active){ display:none !important; }
-    .form-page.active-page{ display:block !important; }
+    .view.active > .container > *:not(#mentee-form){ display:none !important; }
+    #mentee-form > .form-page:not(.active-page){ display:none !important; }
+    #mentee-form > .form-page.active-page > *:not(#summary-content):not(.summary-header){ display:none !important; }
+    .form-nav, .no-print-hide{ display:none !important; }
     #summary-content{ margin:0; padding:0; }
     .summary-wrap .card{ break-inside:avoid; box-shadow:none; border:1px solid #ddd; margin-bottom:8px; }
-    .container{ max-width:100%; padding:0; margin:0; }
+    .container{ max-width:100% !important; padding:0 !important; margin:0 !important; }
+    .view, .form-page, #mentee-form{ margin:0 !important; padding:0 !important; }
   }
   .radio-group{ margin-bottom:4px; }
   .checklist-grid{ display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; margin-bottom:10px; }

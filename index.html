@@ -284,7 +284,10 @@
   .summary-answer{ font-size:13.5px; margin:2px 0 14px; padding:6px 10px; background:#e3f2fd; color:#1a1a1a; border-radius:var(--radius-card); border:1px solid #bbdefb; }
   @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .summary-answer{ background:#1a3a5c; color:#eceff1; border-color:#2a5a8c; } }
   :root[data-theme="dark"] .summary-answer{ background:#1a3a5c; color:#eceff1; border-color:#2a5a8c; }
-  .success-row{ padding:3px 0; font-size:13.5px; }
+  .success-table{ width:auto; border-collapse:collapse; font-size:13.5px; }
+  .success-table td{ padding:2px 0; }
+  .success-table td:first-child{ padding-right:12px; }
+  .success-table td:last-child{ font-family:var(--font-mono); }
   .summary-sub{ margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
   .summary-sub:last-child{ border-bottom:none; margin-bottom:0; }
   @media print {
@@ -1152,7 +1155,13 @@ function buildSummaryHtml(resp){
   h += `<div class="field-label">Primary Priority</div><p class="summary-answer">${esc(refl.primaryPriority90||'—')}</p>`;
   h += `<div class="field-label">Why?</div><p class="summary-answer">${esc(refl.priorityWhy||'—')}</p>`;
   h += `<div class="field-label">What Would Success Look Like?</div>`;
-  h += `<p class="summary-answer">Jalur aktif: <strong>${esc(refl.successJalur||'—')}</strong> · Orang aktif: <strong>${esc(refl.successOrangAktif||'—')}</strong> · Trainer: <strong>${esc(refl.successTrainer||'—')}</strong> · Omzet: <strong>${esc(refl.successOmzet||'—')}</strong> · Peringkat: <strong>${esc(refl.successPeringkat||'—')}</strong></p>`;
+  h += `<div class="summary-answer"><table class="success-table">
+    <tr><td>Tambahan jalur aktif</td><td><strong>${esc(refl.successJalur||'—')}</strong></td></tr>
+    <tr><td>Tambahan orang aktif</td><td><strong>${esc(refl.successOrangAktif||'—')}</strong></td></tr>
+    <tr><td>Tambahan trainer</td><td><strong>${esc(refl.successTrainer||'—')}</strong></td></tr>
+    <tr><td>Omzet</td><td><strong>${esc(refl.successOmzet||'—')}</strong></td></tr>
+    <tr><td>Peringkat</td><td><strong>${esc(refl.successPeringkat||'—')}</strong></td></tr>
+  </table></div>`;
   h += `</div></div>`;
 
   // Who Will Become Better (after 90-Day Priority)

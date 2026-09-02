@@ -908,7 +908,8 @@ function emptyResponse(){
       movementBlocker:{what:'',behavior:'',newResponse:''},
       driveType:'', driveTypeExplain:'', commitAnswer:'', commitExplain:'',
       barriers:{}, barrierOther:'', biggestBarrier:'', barrierConsequence:'',
-      priorities90:[], primaryPriority90:'', priorityWhy:'', prioritySuccess:'',
+      priorities90:[], primaryPriority90:'', priorityWhy:'',
+      successJalur:'', successOrangAktif:'', successTrainer:'', successOmzet:'', successPeringkat:'',
       dreamLastViewed:'', dreamStillMoves:'', dreamLife3to5:'', dreamWhyImportant:'', dreamWhatChanges:'',
       developPeople:[blankDevelopPerson(),blankDevelopPerson(),blankDevelopPerson()],
       commitStop:'', commitStart:'', commitContinue:'', signatureData:''
@@ -1271,8 +1272,17 @@ function renderMenteeForm(){
     <textarea rows="2" data-refl-single="priorityWhy" placeholder="...">${esc(refl.priorityWhy||'')}</textarea>
 
     <div class="field-label">WHAT WOULD SUCCESS LOOK LIKE? <span class="req">*</span></div>
-    <p style="font-size:12.5px;color:var(--ink-mute);margin-bottom:4px;">Pada akhir program Build The Pro</p>
-    <textarea rows="2" data-refl-single="prioritySuccess" placeholder="...">${esc(refl.prioritySuccess||'')}</textarea>
+    <p style="font-size:12.5px;color:var(--ink-mute);margin-bottom:8px;">Pada akhir program Build The Pro</p>
+    <label style="font-size:13px;display:block;margin-bottom:4px;">Berapa tambahan jalur aktif?</label>
+    <input type="text" data-refl-single="successJalur" value="${esc(refl.successJalur||'')}" placeholder="...">
+    <label style="font-size:13px;display:block;margin:10px 0 4px;">Berapa tambahan orang aktif?</label>
+    <input type="text" data-refl-single="successOrangAktif" value="${esc(refl.successOrangAktif||'')}" placeholder="...">
+    <label style="font-size:13px;display:block;margin:10px 0 4px;">Berapa tambahan trainer?</label>
+    <input type="text" data-refl-single="successTrainer" value="${esc(refl.successTrainer||'')}" placeholder="...">
+    <label style="font-size:13px;display:block;margin:10px 0 4px;">Omzet?</label>
+    <input type="text" data-refl-single="successOmzet" value="${esc(refl.successOmzet||'')}" placeholder="...">
+    <label style="font-size:13px;display:block;margin:10px 0 4px;">Peringkat?</label>
+    <input type="text" data-refl-single="successPeringkat" value="${esc(refl.successPeringkat||'')}" placeholder="...">
   </div></div>`;
   html += buildFormNav(6, 7);
   html += `</div>`;
@@ -2242,7 +2252,7 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
         ${(Array.isArray(refl.priorities90)&&refl.priorities90.length)?`<p>${refl.priorities90.map(esc).join(', ')}</p>`:'<p class="empty-line">Not filled in.</p>'}
         ${refl.primaryPriority90?`<p><b>Primary:</b> ${esc(refl.primaryPriority90)}</p>`:''}
         ${refl.priorityWhy?`<p style="color:var(--ink-mute);font-size:12.5px;">Why: ${esc(refl.priorityWhy)}</p>`:''}
-        ${refl.prioritySuccess?`<p style="color:var(--ink-mute);font-size:12.5px;">Success: ${esc(refl.prioritySuccess)}</p>`:''}
+        ${(refl.successJalur||refl.successOrangAktif||refl.successTrainer||refl.successOmzet||refl.successPeringkat)?`<p style="color:var(--ink-mute);font-size:12.5px;">Success: ${[refl.successJalur?'Jalur aktif: '+esc(refl.successJalur):'', refl.successOrangAktif?'Orang aktif: '+esc(refl.successOrangAktif):'', refl.successTrainer?'Trainer: '+esc(refl.successTrainer):'', refl.successOmzet?'Omzet: '+esc(refl.successOmzet):'', refl.successPeringkat?'Peringkat: '+esc(refl.successPeringkat):''].filter(Boolean).join(' · ')}</p>`:''}
       </div>
     </div>
     <div class="refl-block"><h4>Who I'm developing this round</h4>

@@ -1120,9 +1120,11 @@ function validatePage(pageEl){
     }
   });
 
-  // 3. Required textareas and text inputs (data-refl-single)
-  pageEl.querySelectorAll('textarea[data-refl-single], input[data-refl-single]').forEach(el => {
+  // 3. All visible textareas and text inputs (except develop-person blocks, handled in step 7)
+  pageEl.querySelectorAll('textarea, input[type="text"]').forEach(el => {
     if(el.style.display === 'none') return; // skip conditionally hidden
+    if(el.closest('.person-hidden')) return; // skip hidden person blocks
+    if(el.closest('.develop-person-block')) return; // handled by step 7
     el.classList.remove('field-missing');
     if(!el.value.trim()){ el.classList.add('field-missing'); missing.push(el); }
   });

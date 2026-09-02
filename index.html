@@ -1089,6 +1089,7 @@ const FORM_PAGE_TITLES = [
   'From "I Can" to "I Will"',
   'My 90-Day Priority',
   'Who Will Become Better',
+  'Dream & Commitment',
   'Summary'
 ];
 let currentFormPage = 1;
@@ -1308,7 +1309,7 @@ function goToFormPage(page){
   if(page < 1 || page > pages.length) return;
 
   // Validate current page when going forward (skip validation when leaving summary page)
-  if(page > currentFormPage && currentFormPage < 8){
+  if(page > currentFormPage && currentFormPage < 9){
     const currentPageEl = container.querySelector(`.form-page[data-page="${currentFormPage}"]`);
     const {errors, firstMissing} = validatePage(currentPageEl);
     if(errors.length){
@@ -1321,7 +1322,7 @@ function goToFormPage(page){
   currentFormPage = page;
 
   // Refresh summary when navigating to page 8
-  if(page === 8){
+  if(page === 9){
     const resp = getResponse(menteeState.id, menteeState.round);
     const summaryEl = document.getElementById('summary-content');
     if(summaryEl) summaryEl.innerHTML = buildSummaryHtml(resp);
@@ -1372,7 +1373,7 @@ function renderMenteeForm(){
     }
   });
   html += `</div></div>`;
-  html += buildFormNav(1, 8);
+  html += buildFormNav(1, 9);
   html += `</div>`;
 
   // ---- Page 2: Reflection: Strengths & Gaps ----
@@ -1417,7 +1418,7 @@ function renderMenteeForm(){
     <p style="font-size:12.5px;color:var(--ink-mute);margin:10px 0 4px;">Jika saya hanya boleh meningkatkan tiga kemampuan selama 90 hari, kemampuan apa yang paling berdampak?</p>
     <textarea rows="2" data-refl-single="lastQ3">${esc(refl.lastQ3)}</textarea>
   </div></div>`;
-  html += buildFormNav(2, 8);
+  html += buildFormNav(2, 9);
   html += `</div>`;
 
   // ---- Page 3: Part 2: Drive ----
@@ -1434,7 +1435,7 @@ function renderMenteeForm(){
     }
   });
   html += `</div></div>`;
-  html += buildFormNav(3, 8);
+  html += buildFormNav(3, 9);
   html += `</div>`;
 
   // ---- Page 4: Reflection: Drivers ----
@@ -1497,7 +1498,7 @@ function renderMenteeForm(){
     </div>
     <textarea rows="2" data-refl-single="commitExplain" placeholder="Jelaskan...">${esc(refl.commitExplain)}</textarea>
   </div></div>`;
-  html += buildFormNav(4, 8);
+  html += buildFormNav(4, 9);
   html += `</div>`;
 
   // ---- Page 5: From "I Can" to "I Will" ----
@@ -1516,7 +1517,7 @@ function renderMenteeForm(){
     <div class="field-label">Kalau saya tidak mengubah ini, apa yang kemungkinan terjadi pada bisnis saya 12 bulan ke depan? <span class="req">*</span></div>
     <textarea rows="2" data-refl-single="barrierConsequence" placeholder="...">${esc(refl.barrierConsequence)}</textarea>
   </div></div>`;
-  html += buildFormNav(5, 8);
+  html += buildFormNav(5, 9);
   html += `</div>`;
 
   // ---- Page 6: My 90-Day Priority ----
@@ -1548,7 +1549,7 @@ function renderMenteeForm(){
     <label style="font-size:13px;display:block;margin:10px 0 4px;">Peringkat?</label>
     <input type="text" data-refl-single="successPeringkat" value="${esc(refl.successPeringkat||'')}" placeholder="...">
   </div></div>`;
-  html += buildFormNav(6, 8);
+  html += buildFormNav(6, 9);
   html += `</div>`;
 
   // ---- Page 7: Who Will Become Better Because of Me? ----
@@ -1583,18 +1584,53 @@ function renderMenteeForm(){
     </div>
     <button type="button" id="add-person-btn" style="margin-top:12px;padding:8px 18px;border:1px dashed var(--border);border-radius:var(--radius-card);background:var(--surface);color:var(--ink-mute);cursor:pointer;font-size:13.5px;width:100%;${visiblePeople>=3?'display:none':''}">+ Tambah orang</button>
   </div></div>`;
-  html += buildFormNav(7, 8);
+  html += buildFormNav(7, 9);
   html += `</div>`;
 
-  // ---- Page 8: Summary ----
+  // ---- Page 8: Dream & Commitment ----
   html += `<div class="form-page" data-page="8">`;
+  html += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Dream</h3></div></div><div class="card-body">
+    <div class="field-label">Kapan terakhir kali kamu membuka buku impianmu? <span class="req">*</span></div>
+    <textarea rows="2" data-refl-single="dreamLastViewed" placeholder="...">${esc(refl.dreamLastViewed||'')}</textarea>
+
+    <div class="field-label">Apakah impianmu masih menggerakkanmu hari ini? <span class="req">*</span></div>
+    <textarea rows="2" data-refl-single="dreamStillMoves" placeholder="...">${esc(refl.dreamStillMoves||'')}</textarea>
+
+    <div class="field-label">Seperti apa kehidupan yang ingin kamu bangun 3–5 tahun ke depan? <span class="req">*</span></div>
+    <textarea rows="3" data-refl-single="dreamLife3to5" placeholder="...">${esc(refl.dreamLife3to5||'')}</textarea>
+
+    <div class="field-label">Mengapa itu penting untuk kamu? <span class="req">*</span></div>
+    <textarea rows="2" data-refl-single="dreamWhyImportant" placeholder="...">${esc(refl.dreamWhyImportant||'')}</textarea>
+
+    <div class="field-label">Apa yang akan berubah jika kamu berhasil mencapainya? <span class="req">*</span></div>
+    <textarea rows="2" data-refl-single="dreamWhatChanges" placeholder="...">${esc(refl.dreamWhatChanges||'')}</textarea>
+  </div></div>`;
+
+  html += `<div class="card"><div class="card-head"><div><div class="tag">Commitment</div><h3>Stop / Start / Continue</h3></div></div><div class="card-body">
+    <div class="field-label">I will STOP <span class="req">*</span></div>
+    <p class="hint">Apa yang akan saya berhenti lakukan karena menghambat pertumbuhan saya?</p>
+    <textarea rows="2" data-refl-single="commitStop" placeholder="...">${esc(refl.commitStop||'')}</textarea>
+
+    <div class="field-label">I will START <span class="req">*</span></div>
+    <p class="hint">Apa yang akan saya mulai lakukan untuk mendorong pertumbuhan saya?</p>
+    <textarea rows="2" data-refl-single="commitStart" placeholder="...">${esc(refl.commitStart||'')}</textarea>
+
+    <div class="field-label">I will CONTINUE <span class="req">*</span></div>
+    <p class="hint">Apa yang sudah berjalan baik dan akan saya teruskan?</p>
+    <textarea rows="2" data-refl-single="commitContinue" placeholder="...">${esc(refl.commitContinue||'')}</textarea>
+  </div></div>`;
+  html += buildFormNav(8, 9);
+  html += `</div>`;
+
+  // ---- Page 9: Summary ----
+  html += `<div class="form-page" data-page="9">`;
   html += `<div style="display:flex;justify-content:flex-end;margin-bottom:12px;" class="no-print-hide">
     <button type="button" class="btn btn-primary" id="download-summary-pdf">📄 Download PDF</button>
   </div>`;
   html += `<div id="summary-content">`;
   html += buildSummaryHtml(resp);
   html += `</div>`;
-  html += buildFormNav(8, 8);
+  html += buildFormNav(9, 9);
   html += `</div>`;
 
   container.innerHTML = html;

@@ -291,18 +291,7 @@
   .summary-sub{ margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
   .summary-sub:last-child{ border-bottom:none; margin-bottom:0; }
   @media print {
-    body, html{ margin:0 !important; padding:0 !important; }
-    body > *:not(#view-mentee):not(#view-mentor):not(#view-leader){ display:none !important; }
-    .topbar, .scale-float, #auth-gate{ display:none !important; }
-    .view:not(.active){ display:none !important; }
-    .view.active > .container > *:not(#mentee-form){ display:none !important; }
-    #mentee-form > .form-page:not(.active-page){ display:none !important; }
-    #mentee-form > .form-page.active-page > *:not(#summary-content):not(.summary-header){ display:none !important; }
-    .form-nav, .no-print-hide{ display:none !important; }
-    #summary-content{ margin:0; padding:0; }
-    .summary-wrap .card{ break-inside:avoid; box-shadow:none; border:1px solid #ddd; margin-bottom:8px; }
-    .container{ max-width:100% !important; padding:0 !important; margin:0 !important; }
-    .view, .form-page, #mentee-form{ margin:0 !important; padding:0 !important; }
+    .no-print-hide{ display:none !important; }
   }
   .radio-group{ margin-bottom:4px; }
   .checklist-grid{ display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; margin-bottom:10px; }
@@ -1963,7 +1952,39 @@ function wireMenteeForm(resp){
   const pdfBtn = document.getElementById('download-summary-pdf');
   if(pdfBtn){
     pdfBtn.addEventListener('click', ()=>{
-      window.print();
+      const content = document.getElementById('summary-content');
+      const header = document.querySelector('.summary-header');
+      if(!content) return;
+      const win = window.open('', '_blank');
+      win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Build The Pro — Summary</title>
+        <style>
+          body{font-family:system-ui,-apple-system,sans-serif;margin:20px;color:#1B1F1A;font-size:13.5px;line-height:1.5;}
+          .card{border:1px solid #ddd;border-radius:8px;margin-bottom:10px;break-inside:avoid;overflow:hidden;}
+          .card-head{padding:12px 16px;border-bottom:1px solid #eee;}
+          .card-body{padding:12px 16px;}
+          .tag{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:2px;}
+          h3{margin:0;font-size:15px;} h4{margin:0 0 6px;font-size:13px;}
+          .field-label{font-size:14px;font-weight:700;margin:16px 0 6px;padding-top:12px;border-top:1px solid #eee;}
+          .field-label:first-child{margin-top:0;padding-top:0;border-top:none;}
+          .summary-answer{font-size:13px;margin:2px 0 10px;padding:6px 10px;background:#e3f2fd;border-radius:6px;border:1px solid #bbdefb;}
+          .summary-list{margin:4px 0 12px 20px;font-size:13px;}
+          .summary-list li{margin-bottom:2px;}
+          .summary-sub{margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eee;}
+          .summary-sub:last-child{border-bottom:none;margin-bottom:0;}
+          .success-table{border-collapse:collapse;font-size:13px;}
+          .success-table td{padding:2px 0;}
+          .success-table td:first-child{padding-right:12px;}
+          .success-table td:last-child{font-weight:600;}
+          .summary-header{text-align:center;padding:0 0 10px;}
+          .summary-header h2{margin:0 0 2px;font-size:18px;}
+          .summary-header p{margin:0;color:#888;font-size:13px;}
+          strong{font-weight:600;}
+        </style></head><body>`);
+      if(header) win.document.write(header.outerHTML);
+      win.document.write(content.innerHTML);
+      win.document.write('</body></html>');
+      win.document.close();
+      setTimeout(()=>{ win.print(); }, 300);
     });
   }
 }

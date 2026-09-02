@@ -2643,9 +2643,28 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     <div class="refl-block"><h4>Who I'm developing this round</h4>
       ${peopleFilled.length ? peopleFilled.map(p=>{
         const conds = [...(Array.isArray(p.conditions)?p.conditions:[]), p.conditionOther].filter(Boolean);
-        return `<p><b>${esc(p.name)}</b>${p.category?' ('+esc(p.category)+')':''}${conds.length?' — '+conds.map(esc).join(', '):''}${p.gap?' — gap: '+esc(p.gap):''}</p>`;
+        const targets = (p.targets||[]).filter(Boolean);
+        return `<p><b>${esc(p.name)}</b>${p.category?' ('+esc(p.category)+')':''}${conds.length?' — '+conds.map(esc).join(', '):''}${p.gap?' — gap: '+esc(p.gap):''}${targets.length?' — targets: '+targets.map(esc).join('; '):''}</p>`;
       }).join('') : '<p class="empty-line">Not filled in.</p>'}
     </div>
+    </div></div>`;
+
+  // Dream
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Reflection · ${ROUNDS.find(r=>r.key===round).short}</div><h3>Dream</h3></div></div>
+    <div class="card-body">
+    <div class="refl-block"><h4>Kapan terakhir membuka buku impian?</h4>${refl.dreamLastViewed?`<p>${esc(refl.dreamLastViewed)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>Apakah masih menggerakkan?</h4>${refl.dreamStillMoves?`<p>${esc(refl.dreamStillMoves)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>Kehidupan 3–5 tahun ke depan</h4>${refl.dreamLife3to5?`<p>${esc(refl.dreamLife3to5)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>Mengapa penting?</h4>${refl.dreamWhyImportant?`<p>${esc(refl.dreamWhyImportant)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>Apa yang berubah?</h4>${refl.dreamWhatChanges?`<p>${esc(refl.dreamWhatChanges)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    </div></div>`;
+
+  // Commitment: Stop / Start / Continue
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Commitment · ${ROUNDS.find(r=>r.key===round).short}</div><h3>Stop / Start / Continue</h3></div></div>
+    <div class="card-body">
+    <div class="refl-block"><h4>I will STOP</h4>${refl.commitStop?`<p>${esc(refl.commitStop)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>I will START</h4>${refl.commitStart?`<p>${esc(refl.commitStart)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>I will CONTINUE</h4>${refl.commitContinue?`<p>${esc(refl.commitContinue)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
     </div></div>`;
 
   return out;

@@ -1194,12 +1194,20 @@ function buildSummaryHtml(resp){
   h += `<div class="field-label">Apa yang berubah?</div><p class="summary-answer">${esc(refl.dreamWhatChanges||'—')}</p>`;
   h += `</div></div>`;
 
-  // Commitment
-  h += `<div class="card"><div class="card-head"><div><div class="tag">Commitment</div><h3>Stop / Start / Continue</h3></div></div><div class="card-body">`;
-  h += `<div class="field-label">I will STOP</div><p class="summary-answer">${esc(refl.commitStop||'—')}</p>`;
-  h += `<div class="field-label">I will START</div><p class="summary-answer">${esc(refl.commitStart||'—')}</p>`;
-  h += `<div class="field-label">I will CONTINUE</div><p class="summary-answer">${esc(refl.commitContinue||'—')}</p>`;
-  h += `</div></div>`;
+  // Final Commitment
+  const today = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Final</div><h3>FINAL COMMITMENT</h3></div></div><div class="card-body">
+    <p style="font-size:14px;line-height:1.7;margin-bottom:18px;">Saya <strong>${esc(mentee?mentee.name:'____')}</strong> memilih menjadi PRO bukan untuk terlihat lebih hebat, tetapi untuk membuat lebih banyak orang mampu bertumbuh, bergerak dan menjadi mandiri.</p>
+    <div class="field-label">I WILL STOP</div><p class="summary-answer">${esc(refl.commitStop||'—')}</p>
+    <div class="field-label">I WILL START</div><p class="summary-answer">${esc(refl.commitStart||'—')}</p>
+    <div class="field-label">I WILL CONTINUE</div><p class="summary-answer">${esc(refl.commitContinue||'—')}</p>
+    <p style="font-size:14px;line-height:1.7;margin:18px 0;">Saya tidak mengikuti BUILD THE PRO hanya untuk menyelesaikan kelas dan mission. Saya mengambil komitmen penuh untuk hadir, menjalankan, dan menuntaskan seluruh proses ini dengan integritas. Saya akan menjalankan ritme <strong>3 PRESENT – 9 FOLLOW – 3 DEVELOP</strong> setiap minggu sebagai disiplin hidup saya untuk membawa dampak nyata bagi lebih banyak orang.</p>
+    <div style="margin-top:24px;font-size:14px;line-height:2;">
+      <div><strong>Nama Participant:</strong> ${esc(mentee?mentee.name:'—')}</div>
+      <div><strong>Mentor:</strong> ${esc(mentor?mentor.name:'—')}</div>
+      <div><strong>Tanggal:</strong> ${today}</div>
+    </div>
+  </div></div>`;
 
   h += `</div>`; // close summary-wrap
   return h;

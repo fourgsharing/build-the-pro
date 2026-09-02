@@ -2581,90 +2581,104 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
   const resp = getResponse(menteeId, round);
   const refl = resp.reflections;
 
-  // Full question-by-question answers
-  out += `<div class="card"><div class="card-head"><div><div class="tag">Full answers · ${ROUNDS.find(r=>r.key===round).short}</div><h3>Every Question &amp; Score</h3></div></div>
+  const roundLabel = ROUNDS.find(r=>r.key===round).short;
+  const nb = (val) => val ? `<p>${esc(val)}</p>` : '<p class="empty-line">Not filled in.</p>';
+
+  // Part 1: Skill Scores
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Part 1 · ${roundLabel}</div><h3>What Can I Really Do? — Skill Scores</h3></div></div>
     <div class="card-body">
     <details class="answers-toggle" open>
-      <summary>Skill self-assessment — "What Can I Really Do?" (${Object.keys(resp.skill).length} / 35 answered)</summary>
+      <summary>All 35 skill questions (${Object.keys(resp.skill).length} answered)</summary>
       <div class="answers-list">${fullAnswersHtml(resp,'skill')}</div>
     </details>
-    <details class="answers-toggle">
-      <summary>Drive / motivation — "What Makes Me Move?" (${Object.keys(resp.drive).length} / 15 answered)</summary>
+    </div></div>`;
+
+  // Reflection: Strengths & Gaps
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Reflection · ${roundLabel}</div><h3>Strengths &amp; Gaps</h3></div></div>
+    <div class="card-body">
+    <div class="refl-block"><h4>My Strengths</h4>${refl.strengths.filter(Boolean).length?`<ul>${refl.strengths.filter(Boolean).map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>My Development Areas</h4>${refl.devAreas.filter(Boolean).length?`<ul>${refl.devAreas.filter(Boolean).map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>My Skill Gaps</h4>${(Array.isArray(refl.gaps)&&refl.gaps.filter(Boolean).length)?`<ul>${refl.gaps.filter(Boolean).map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>Aktivitas yang sudah dikuasai dengan baik</h4>${nb(refl.lastQ1)}</div>
+    <div class="refl-block"><h4>Aktivitas yang masih butuh bantuan</h4>${nb(refl.lastQ2)}</div>
+    <div class="refl-block"><h4>3 kemampuan paling berdampak untuk 90 hari</h4>${nb(refl.lastQ3)}</div>
+    </div></div>`;
+
+  // Part 2: Drive Scores
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Part 2 · ${roundLabel}</div><h3>What Makes Me Move? — Drive Scores</h3></div></div>
+    <div class="card-body">
+    <details class="answers-toggle" open>
+      <summary>All 15 drive questions (${Object.keys(resp.drive).length} answered)</summary>
       <div class="answers-list">${fullAnswersHtml(resp,'drive')}</div>
     </details>
     </div></div>`;
 
-  // Skill gaps display
-  const gapList = Array.isArray(refl.gaps) ? refl.gaps.filter(Boolean) : [];
-  out += `<div class="card"><div class="card-head"><div><div class="tag">Skill Gaps · ${ROUNDS.find(r=>r.key===round).short}</div><h3>Top Skill Gaps</h3></div></div>
+  // Reflection: Drivers
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Reflection · ${roundLabel}</div><h3>Drivers</h3></div></div>
     <div class="card-body">
-    ${gapList.length ? `<ul>${gapList.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>` : '<span class="empty-line">No gaps recorded for this round.</span>'}
+    <div class="refl-block"><h4>My Active Drivers</h4>${(Array.isArray(refl.activeDrivers)&&refl.activeDrivers.length)?`<ul>${refl.activeDrivers.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>Drivers to Strengthen</h4>${(Array.isArray(refl.driversToStrengthen)&&refl.driversToStrengthen.length)?`<ul>${refl.driversToStrengthen.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>Movement Blockers</h4>${(Array.isArray(refl.movementBlockers)&&refl.movementBlockers.length)?`<ul>${refl.movementBlockers.map(b=>`<li>${esc(b.what)}${b.note?`<br><span style="color:var(--ink-mute);font-size:12.5px;">Cara mengatasinya: ${esc(b.note)}</span>`:''}</li>`).join('')}</ul>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>Drive Type</h4>${nb(refl.driveType==='a'?'Internal Drive':refl.driveType==='b'?'Mixed Drive':refl.driveType==='c'?'External Drive':'')}
+      ${refl.driveTypeExplain?`<p style="color:var(--ink-mute);font-size:12.5px;">${esc(refl.driveTypeExplain)}</p>`:''}</div>
+    <div class="refl-block"><h4>Tetap bergerak tanpa mission/hadiah/mentor?</h4><p>${refl.commitAnswer==='yes'?'YES':'NOT YET'}${refl.commitExplain?' — '+esc(refl.commitExplain):''}</p></div>
     </div></div>`;
 
-  // Reflections
-  out += `<div class="card"><div class="card-head"><div><div class="tag">Reflection · ${ROUNDS.find(r=>r.key===round).short}</div><h3>Self-Assessment Notes</h3></div></div>
-    <div class="card-body">
-    <div class="refl-two-col">
-      <div class="refl-block"><h4>Top 3 strengths</h4>${refl.strengths.filter(Boolean).length?`<ul>${refl.strengths.filter(Boolean).map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:'<p class="empty-line">Not filled in.</p>'}</div>
-      <div class="refl-block"><h4>Top 3 development areas</h4>${refl.devAreas.filter(Boolean).length?`<ul>${refl.devAreas.filter(Boolean).map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:'<p class="empty-line">Not filled in.</p>'}</div>
-    </div>
-    <div class="refl-block"><h4>Last questions</h4>
-      ${refl.lastQ1?`<p>${esc(refl.lastQ1)}</p>`:'<p class="empty-line">Not filled in.</p>'}
-      ${refl.lastQ2?`<p>${esc(refl.lastQ2)}</p>`:''}
-      ${refl.lastQ3?`<p>${esc(refl.lastQ3)}</p>`:''}
-    </div>
-    <div class="refl-two-col">
-      <div class="refl-block"><h4>Active drivers</h4>${(Array.isArray(refl.activeDrivers)&&refl.activeDrivers.length)?`<ul>${refl.activeDrivers.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:(refl.activeDriver&&refl.activeDriver.what?`<p>${esc(refl.activeDriver.what)}</p>`:'<p class="empty-line">Not filled in.</p>')}</div>
-      <div class="refl-block"><h4>Drivers to strengthen</h4>${(Array.isArray(refl.driversToStrengthen)&&refl.driversToStrengthen.length)?`<ul>${refl.driversToStrengthen.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:(refl.driverToStrengthen&&refl.driverToStrengthen.what?`<p>${esc(refl.driverToStrengthen.what)}</p>`:'<p class="empty-line">Not filled in.</p>')}</div>
-    </div>
-    <div class="refl-two-col">
-      <div class="refl-block"><h4>Movement blockers</h4>${(Array.isArray(refl.movementBlockers)&&refl.movementBlockers.length)?`<ul>${refl.movementBlockers.map(b=>`<li>${esc(b.what)}${b.note?`<br><span style="color:var(--ink-mute);font-size:12.5px;">Cara mengatasinya: ${esc(b.note)}</span>`:''}</li>`).join('')}</ul>`:(refl.movementBlocker&&refl.movementBlocker.what?`<p>${esc(refl.movementBlocker.what)}</p>`:'<p class="empty-line">Not filled in.</p>')}</div>
-    </div>
-    </div></div>`;
-
-  // Vision & Commitment
+  // From "I Can" to "I Will"
   const checkedBarriers = BARRIER_OPTIONS.filter((_,i)=>refl.barriers[i]);
-  const peopleFilled = refl.developPeople.filter(p=>p.name);
-  out += `<div class="card"><div class="card-head"><div><div class="tag">Reflection · ${ROUNDS.find(r=>r.key===round).short}</div><h3>Vision &amp; Commitment</h3></div></div>
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Reflection · ${roundLabel}</div><h3>From "I Can" to "I Will"</h3></div></div>
     <div class="card-body">
-    <div class="refl-block"><h4>Biggest internal barrier</h4>
-      ${checkedBarriers.length||refl.barrierOther?`<p style="color:var(--ink-mute);font-size:12.5px;">${[...checkedBarriers,refl.barrierOther].filter(Boolean).map(esc).join(', ')}</p>`:''}
-      ${refl.biggestBarrier?`<p>${esc(refl.biggestBarrier)}</p>`:'<p class="empty-line">Not filled in.</p>'}
-      ${refl.barrierConsequence?`<p style="color:var(--ink-mute);font-size:12.5px;">If unchanged in 12 months: ${esc(refl.barrierConsequence)}</p>`:''}
+    <div class="refl-block"><h4>Barriers</h4>
+      ${checkedBarriers.length||refl.barrierOther?`<ul>${[...checkedBarriers,refl.barrierOther?'Lainnya: '+refl.barrierOther:''].filter(Boolean).map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:'<p class="empty-line">Not filled in.</p>'}
     </div>
-    <div class="refl-two-col">
-      <div class="refl-block"><h4>90-Day Priority</h4>
-        ${(Array.isArray(refl.priorities90)&&refl.priorities90.length)?`<p>${refl.priorities90.map(esc).join(', ')}</p>`:'<p class="empty-line">Not filled in.</p>'}
-        ${refl.primaryPriority90?`<p><b>Primary:</b> ${esc(refl.primaryPriority90)}</p>`:''}
-        ${refl.priorityWhy?`<p style="color:var(--ink-mute);font-size:12.5px;">Why: ${esc(refl.priorityWhy)}</p>`:''}
-        ${(refl.successJalur||refl.successOrangAktif||refl.successTrainer||refl.successOmzet||refl.successPeringkat)?`<p style="color:var(--ink-mute);font-size:12.5px;">Success: ${[refl.successJalur?'Jalur aktif: '+esc(refl.successJalur):'', refl.successOrangAktif?'Orang aktif: '+esc(refl.successOrangAktif):'', refl.successTrainer?'Trainer: '+esc(refl.successTrainer):'', refl.successOmzet?'Omzet: '+esc(refl.successOmzet):'', refl.successPeringkat?'Peringkat: '+esc(refl.successPeringkat):''].filter(Boolean).join(' · ')}</p>`:''}
-      </div>
+    <div class="refl-block"><h4>My Biggest Internal Barrier</h4>${nb(refl.biggestBarrier)}</div>
+    <div class="refl-block"><h4>Konsekuensi jika tidak berubah (12 bulan)</h4>${nb(refl.barrierConsequence)}</div>
+    </div></div>`;
+
+  // My 90-Day Priority
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Reflection · ${roundLabel}</div><h3>My 90-Day Priority</h3></div></div>
+    <div class="card-body">
+    <div class="refl-block"><h4>Priorities</h4>${(Array.isArray(refl.priorities90)&&refl.priorities90.length)?`<ul>${refl.priorities90.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>Primary Priority</h4>${nb(refl.primaryPriority90)}</div>
+    <div class="refl-block"><h4>Why?</h4>${nb(refl.priorityWhy)}</div>
+    <div class="refl-block"><h4>What Would Success Look Like?</h4>
+      ${(refl.successJalur||refl.successOrangAktif||refl.successTrainer||refl.successOmzet||refl.successPeringkat)?`<p>Jalur aktif: <b>${esc(refl.successJalur||'—')}</b> · Orang aktif: <b>${esc(refl.successOrangAktif||'—')}</b> · Trainer: <b>${esc(refl.successTrainer||'—')}</b> · Omzet: <b>${esc(refl.successOmzet||'—')}</b> · Peringkat: <b>${esc(refl.successPeringkat||'—')}</b></p>`:'<p class="empty-line">Not filled in.</p>'}
     </div>
-    <div class="refl-block"><h4>Who I'm developing this round</h4>
-      ${peopleFilled.length ? peopleFilled.map(p=>{
-        const conds = [...(Array.isArray(p.conditions)?p.conditions:[]), p.conditionOther].filter(Boolean);
-        const targets = (p.targets||[]).filter(Boolean);
-        return `<p><b>${esc(p.name)}</b>${p.category?' ('+esc(p.category)+')':''}${conds.length?' — '+conds.map(esc).join(', '):''}${p.gap?' — gap: '+esc(p.gap):''}${targets.length?' — targets: '+targets.map(esc).join('; '):''}</p>`;
-      }).join('') : '<p class="empty-line">Not filled in.</p>'}
-    </div>
+    </div></div>`;
+
+  // Who Will Become Better Because of Me?
+  const peopleFilled = refl.developPeople.filter(p=>p.name);
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Reflection · ${roundLabel}</div><h3>Who Will Become Better Because of Me?</h3></div></div>
+    <div class="card-body">
+    ${peopleFilled.length ? peopleFilled.map((p,i)=>{
+      const conds = [...(Array.isArray(p.conditions)?p.conditions:[]), p.conditionOther?'Lain-lain: '+p.conditionOther:''].filter(Boolean);
+      const targets = (p.targets||[]).filter(Boolean);
+      return `<div class="refl-block" style="padding:10px 14px;background:var(--surface-2);border-radius:var(--radius-ctl);margin-bottom:10px;">
+        <h4>Person ${i+1}: ${esc(p.name)}</h4>
+        <p><b>Category:</b> ${esc(p.category||'—')}</p>
+        ${conds.length?`<p><b>Current condition:</b> ${conds.map(esc).join(', ')}</p>`:''}
+        <p><b>Biggest gap:</b> ${esc(p.gap||'—')}</p>
+        ${targets.length?`<p><b>Targets:</b></p><ol>${targets.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>`:''}
+      </div>`;
+    }).join('') : '<p class="empty-line">Not filled in.</p>'}
     </div></div>`;
 
   // Dream
-  out += `<div class="card"><div class="card-head"><div><div class="tag">Reflection · ${ROUNDS.find(r=>r.key===round).short}</div><h3>Dream</h3></div></div>
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Reflection · ${roundLabel}</div><h3>Dream</h3></div></div>
     <div class="card-body">
-    <div class="refl-block"><h4>Kapan terakhir membuka buku impian?</h4>${refl.dreamLastViewed?`<p>${esc(refl.dreamLastViewed)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
-    <div class="refl-block"><h4>Apakah masih menggerakkan?</h4>${refl.dreamStillMoves?`<p>${esc(refl.dreamStillMoves)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
-    <div class="refl-block"><h4>Kehidupan 3–5 tahun ke depan</h4>${refl.dreamLife3to5?`<p>${esc(refl.dreamLife3to5)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
-    <div class="refl-block"><h4>Mengapa penting?</h4>${refl.dreamWhyImportant?`<p>${esc(refl.dreamWhyImportant)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
-    <div class="refl-block"><h4>Apa yang berubah?</h4>${refl.dreamWhatChanges?`<p>${esc(refl.dreamWhatChanges)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>Kapan terakhir membuka buku impian?</h4>${nb(refl.dreamLastViewed)}</div>
+    <div class="refl-block"><h4>Apakah masih menggerakkan?</h4>${nb(refl.dreamStillMoves)}</div>
+    <div class="refl-block"><h4>Kehidupan 3–5 tahun ke depan</h4>${nb(refl.dreamLife3to5)}</div>
+    <div class="refl-block"><h4>Mengapa penting?</h4>${nb(refl.dreamWhyImportant)}</div>
+    <div class="refl-block"><h4>Apa yang berubah?</h4>${nb(refl.dreamWhatChanges)}</div>
     </div></div>`;
 
   // Commitment: Stop / Start / Continue
-  out += `<div class="card"><div class="card-head"><div><div class="tag">Commitment · ${ROUNDS.find(r=>r.key===round).short}</div><h3>Stop / Start / Continue</h3></div></div>
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Commitment · ${roundLabel}</div><h3>Stop / Start / Continue</h3></div></div>
     <div class="card-body">
-    <div class="refl-block"><h4>I will STOP</h4>${refl.commitStop?`<p>${esc(refl.commitStop)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
-    <div class="refl-block"><h4>I will START</h4>${refl.commitStart?`<p>${esc(refl.commitStart)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
-    <div class="refl-block"><h4>I will CONTINUE</h4>${refl.commitContinue?`<p>${esc(refl.commitContinue)}</p>`:'<p class="empty-line">Not filled in.</p>'}</div>
+    <div class="refl-block"><h4>I will STOP</h4>${nb(refl.commitStop)}</div>
+    <div class="refl-block"><h4>I will START</h4>${nb(refl.commitStart)}</div>
+    <div class="refl-block"><h4>I will CONTINUE</h4>${nb(refl.commitContinue)}</div>
     </div></div>`;
 
   return out;

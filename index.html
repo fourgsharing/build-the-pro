@@ -2655,7 +2655,7 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     ${peopleFilled.length ? peopleFilled.map((p,i)=>{
       const conds = [...(Array.isArray(p.conditions)?p.conditions:[]), p.conditionOther?'Lain-lain: '+p.conditionOther:''].filter(Boolean);
       const targets = (p.targets||[]).filter(Boolean);
-      return `<div class="refl-block" style="padding:10px 14px;background:var(--surface-2);border-radius:var(--radius-ctl);margin-bottom:10px;">
+      return `<div class="refl-block">
         <h4>Person ${i+1}: ${esc(p.name)}</h4>
         <p><b>Category:</b> ${esc(p.category||'—')}</p>
         ${conds.length?`<p><b>Current condition:</b> ${conds.map(esc).join(', ')}</p>`:''}

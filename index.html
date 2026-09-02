@@ -2013,6 +2013,7 @@ function printSummary(html, logoDataUrl){
   setTimeout(()=>{ printFrame.contentWindow.print(); }, 300);
 }
 
+window.downloadMenteePdf = downloadMenteePdf;
 function downloadMenteePdf(menteeId, round){
   const resp = getResponse(menteeId, round);
   const html = buildSummaryHtml(resp, menteeId, round);

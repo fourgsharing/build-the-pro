@@ -568,6 +568,7 @@
         <label for="leader-filter">Mentor</label>
         <select id="leader-filter"></select>
       </div>
+      <button class="btn btn-ghost btn-sm" id="leader-refresh-btn">↻ Refresh</button>
     </div>
     <div id="leader-manage"></div>
     <div id="leader-stats" class="stat-grid"></div>
@@ -2154,7 +2155,12 @@ function renderMentor(){
 
   const detail = document.getElementById('mentor-detail');
   if(!mentorState.menteeId){ detail.innerHTML = `<div class="detail-empty">No mentees assigned yet.</div>`; return; }
-  detail.innerHTML = renderMenteeDetail(mentorState.menteeId, mentorState.round, true);
+  try{
+    detail.innerHTML = renderMenteeDetail(mentorState.menteeId, mentorState.round, true);
+  }catch(e){
+    detail.innerHTML = `<div class="detail-empty">Error rendering detail: ${e.message}</div>`;
+    console.error('renderMenteeDetail error:', e);
+  }
   wireDetailRoundPills(detail, mentorState.menteeId, (round)=>{ mentorState.round = round; renderMentor(); });
 }
 
@@ -2279,6 +2285,9 @@ const leaderFilter = document.getElementById('leader-filter');
 let leaderState = { mentorFilter:'all', menteeId:null, round:null };
 
 leaderFilter.addEventListener('change', ()=>{ leaderState.mentorFilter = leaderFilter.value; leaderState.menteeId=null; renderLeader(); });
+document.getElementById('leader-refresh-btn').addEventListener('click', ()=>{
+  loadAllFromFirestore().then(()=>{ populateDropdowns(); renderLeader(); toast('Data refreshed.'); });
+});
 
 function populateDropdowns(){
   const curMentee = menteeWho.value;
@@ -2508,7 +2517,12 @@ function renderLeader(){
 
   const detail = document.getElementById('leader-detail');
   if(!leaderState.menteeId){ detail.innerHTML = `<div class="detail-empty">No mentees under this filter.</div>`; return; }
-  detail.innerHTML = renderMenteeDetail(leaderState.menteeId, leaderState.round, true);
+  try{
+    detail.innerHTML = renderMenteeDetail(leaderState.menteeId, leaderState.round, true);
+  }catch(e){
+    detail.innerHTML = `<div class="detail-empty">Error rendering detail: ${e.message}</div>`;
+    console.error('renderMenteeDetail error:', e);
+  }
   wireDetailRoundPills(detail, leaderState.menteeId, (round)=>{ leaderState.round = round; renderLeader(); });
 }
 

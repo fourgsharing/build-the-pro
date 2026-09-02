@@ -2490,7 +2490,7 @@ function renderMentorManageMentee(){
         const nextRound = ROUNDS.find(r=>!hasSubmission(m.id,r.key));
         return `<div class="person-row">
         <input type="text" data-rename-mentee="${m.id}" value="${esc(m.name)}">
-        <select data-link-round="${m.id}" style="font-size:13px;padding:4px 6px;border-radius:6px;border:1px solid var(--border);">
+        <select data-link-round="${m.id}" style="font-size:13px;padding:4px 6px;border-radius:6px;border:1px solid var(--border);width:90px;">
           ${ROUNDS.map(r=>`<option value="${r.key}" ${nextRound&&r.key===nextRound.key?'selected':''}>${r.short}${hasSubmission(m.id,r.key)?' ✓':''}</option>`).join('')}
         </select>
         <button class="btn btn-primary btn-sm" data-copy-link="${m.id}" title="Copy questionnaire link" style="white-space:nowrap;">🔗 Copy link</button>
@@ -2883,7 +2883,7 @@ function renderManagePeople(){
         <span class="drag-handle" title="Drag to reorder">☰</span>
         <input type="text" data-rename-mentee="${m.id}" value="${esc(m.name)}">
         <span class="person-meta">${esc(mentorOf(m.id)?.name || '—')}</span>
-        <select data-leader-link-round="${m.id}" style="font-size:13px;padding:4px 6px;border-radius:6px;border:1px solid var(--border);">
+        <select data-leader-link-round="${m.id}" style="font-size:13px;padding:4px 6px;border-radius:6px;border:1px solid var(--border);width:90px;">
           ${ROUNDS.map(r=>`<option value="${r.key}" ${nextRound&&r.key===nextRound.key?'selected':''}>${r.short}${hasSubmission(m.id,r.key)?' ✓':''}</option>`).join('')}
         </select>
         <button class="btn btn-primary btn-sm" data-leader-copy-link="${m.id}" title="Copy questionnaire link" style="white-space:nowrap;">🔗 Copy link</button>

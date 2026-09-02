@@ -291,11 +291,15 @@
   .summary-sub{ margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
   .summary-sub:last-child{ border-bottom:none; margin-bottom:0; }
   @media print {
-    body *{ visibility:hidden; }
-    #summary-content, #summary-content *{ visibility:visible; }
-    #summary-content{ position:absolute; left:0; top:0; width:100%; }
-    .no-print-hide, .form-nav, .save-bar, .mentee-toolbar, #mentee-already-note{ display:none !important; }
-    .summary-wrap .card{ break-inside:avoid; box-shadow:none; border:1px solid #ddd; }
+    body, html{ margin:0; padding:0; }
+    .top-bar, .role-switch, .no-print-hide, .form-nav, .save-bar, .mentee-toolbar,
+    #mentee-already-note, #mentee-stepper, .form-page:not(.active-page),
+    #download-summary-pdf, .page-indicator, #mentee-clear-btn, #mentee-submit-btn{ display:none !important; }
+    .view:not(.active){ display:none !important; }
+    .form-page.active-page{ display:block !important; }
+    #summary-content{ margin:0; padding:0; }
+    .summary-wrap .card{ break-inside:avoid; box-shadow:none; border:1px solid #ddd; margin-bottom:8px; }
+    .container{ max-width:100%; padding:0; }
   }
   .radio-group{ margin-bottom:4px; }
   .checklist-grid{ display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; margin-bottom:10px; }

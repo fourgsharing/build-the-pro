@@ -469,6 +469,18 @@
       <div class="auth-toggle"><a id="auth-forgot-pw" style="cursor:pointer;">Forgot password?</a></div>
       <div class="auth-error" id="auth-error"></div>
     </div>
+
+    <div id="auth-setup-form" style="display:none;">
+      <p style="font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:14px;">No accounts exist yet. Create the leadership admin account.</p>
+      <label for="setup-name">Full Name</label>
+      <input type="text" id="setup-name" placeholder="Your full name">
+      <label for="setup-email">Email or Username</label>
+      <input type="text" id="setup-email" placeholder="email or username">
+      <label for="setup-password">Password</label>
+      <input type="password" id="setup-password" placeholder="Password (min 6 characters)">
+      <button class="btn btn-primary" id="auth-setup-btn">Create Admin Account</button>
+      <div class="auth-error" id="auth-setup-error"></div>
+    </div>
   </div>
 </div>
 
@@ -2513,6 +2525,40 @@ const linkRound  = urlParams.get('round');
 // Track current user info
 let currentUserRole = null; // 'leadership' | 'mentor'
 let currentUserMentorId = null; // for mentor role
+
+// ── Check if first-time setup is needed ──
+(async function checkFirstTimeSetup(){
+  try{
+    const existingUsers = await db.collection('users').limit(1).get();
+    if(existingUsers.empty){
+      document.getElementById('auth-login-form').style.display = 'none';
+      document.getElementById('auth-setup-form').style.display = 'block';
+    }
+  }catch(e){ console.error('Setup check failed:', e); }
+})();
+
+document.getElementById('auth-setup-btn').addEventListener('click', async ()=>{
+  const fullName = document.getElementById('setup-name').value.trim();
+  const raw = document.getElementById('setup-email').value.trim();
+  const password = document.getElementById('setup-password').value;
+  const errEl = document.getElementById('auth-setup-error');
+  errEl.textContent = '';
+  if(!fullName || !raw || !password){ errEl.textContent = 'All fields are required.'; return; }
+  if(password.length < 6){ errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  const email = toEmail(raw);
+  const btn = document.getElementById('auth-setup-btn');
+  btn.disabled = true; btn.textContent = 'Creating...';
+  try{
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    await db.collection('users').doc(cred.user.uid).set({
+      fullName: fullName, role: 'leadership', createdAt: new Date().toISOString()
+    });
+    // onAuthStateChanged will handle the rest
+  }catch(e){
+    btn.disabled = false; btn.textContent = 'Create Admin Account';
+    errEl.textContent = e.message || 'Setup failed.';
+  }
+});
 
 // ── Auth UI wiring ──
 document.getElementById('auth-forgot-pw').addEventListener('click', async ()=>{

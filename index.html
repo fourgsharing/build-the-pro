@@ -278,7 +278,7 @@
   .summary-table td{ padding:4px 8px; border-bottom:1px solid var(--border); vertical-align:top; }
   .summary-qnum{ width:30px; color:var(--ink-mute); text-align:right; font-family:var(--font-mono); }
   .summary-qtxt{ }
-  .summary-val{ width:40px; text-align:center; font-weight:600; font-family:var(--font-mono); }
+  .summary-val{ width:auto; text-align:left; font-weight:600; font-family:var(--font-mono); padding-left:12px; }
   .summary-list{ margin:4px 0 14px 20px; font-size:13px; }
   .summary-list li{ margin-bottom:3px; }
   .summary-answer{ font-size:13.5px; margin:2px 0 14px; padding:6px 10px; background:#e3f2fd; color:#1a1a1a; border-radius:var(--radius-card); border:1px solid #bbdefb; }
@@ -1174,15 +1174,15 @@ function buildSummaryHtml(resp){
   people.forEach((p,i)=>{
     if(!p.name) return;
     h += `<div class="summary-sub"><h4>Person ${i+1}: ${esc(p.name)}</h4>`;
-    h += `<p style="font-size:13px;margin:2px 0;"><strong>Category:</strong> ${esc(p.category||'—')}</p>`;
+    h += `<div class="summary-answer"><strong>Category:</strong> ${esc(p.category||'—')}</div>`;
     const conds = Array.isArray(p.conditions) ? p.conditions : [];
     if(conds.length || p.conditionOther) {
-      h += `<p style="font-size:13px;margin:2px 0;"><strong>Current condition:</strong> ${[...conds.map(c=>esc(c)), p.conditionOther?'Lain-lain: '+esc(p.conditionOther):''].filter(Boolean).join(', ')}</p>`;
+      h += `<div class="summary-answer"><strong>Current condition:</strong> ${[...conds.map(c=>esc(c)), p.conditionOther?'Lain-lain: '+esc(p.conditionOther):''].filter(Boolean).join(', ')}</div>`;
     }
-    h += `<p style="font-size:13px;margin:2px 0;"><strong>Biggest gap:</strong> ${esc(p.gap||'—')}</p>`;
+    h += `<div class="summary-answer"><strong>Biggest gap:</strong> ${esc(p.gap||'—')}</div>`;
     const targets = (p.targets||[]).filter(t=>t);
     if(targets.length){
-      h += `<p style="font-size:13px;margin:2px 0;"><strong>Targets:</strong></p><ol class="summary-list">${targets.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>`;
+      h += `<div class="summary-answer"><strong>Targets:</strong><ol class="summary-list" style="margin-top:4px;">${targets.map(t=>`<li>${esc(t)}</li>`).join('')}</ol></div>`;
     }
     h += `</div>`;
   });

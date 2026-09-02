@@ -2349,7 +2349,7 @@ function armConfirm(btn, msg, onConfirm){
 
 function wireDragReorder(container, selector, arr, collection, dataKey){
   const rows = [...container.querySelectorAll(selector)];
-  const dragType = 'application/x-drag-' + dataKey;
+  const dragType = 'application/x-drag-' + dataKey.toLowerCase();
   rows.forEach(row => {
     row.addEventListener('dragstart', e => {
       e.dataTransfer.setData(dragType, row.dataset[dataKey]);

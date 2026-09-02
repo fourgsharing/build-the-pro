@@ -1152,25 +1152,10 @@ function buildSummaryHtml(resp){
   h += `<div class="field-label">Primary Priority</div><p class="summary-answer">${esc(refl.primaryPriority90||'—')}</p>`;
   h += `<div class="field-label">Why?</div><p class="summary-answer">${esc(refl.priorityWhy||'—')}</p>`;
   h += `<div class="field-label">What Would Success Look Like?</div>`;
-  h += `<div class="summary-answer">
-    <div class="success-row">Tambahan jalur aktif: <strong>${esc(refl.successJalur||'—')}</strong></div>
-    <div class="success-row">Tambahan orang aktif: <strong>${esc(refl.successOrangAktif||'—')}</strong></div>
-    <div class="success-row">Tambahan trainer: <strong>${esc(refl.successTrainer||'—')}</strong></div>
-    <div class="success-row">Omzet: <strong>${esc(refl.successOmzet||'—')}</strong></div>
-    <div class="success-row">Peringkat: <strong>${esc(refl.successPeringkat||'—')}</strong></div>
-  </div>`;
+  h += `<p class="summary-answer">Jalur aktif: <strong>${esc(refl.successJalur||'—')}</strong> · Orang aktif: <strong>${esc(refl.successOrangAktif||'—')}</strong> · Trainer: <strong>${esc(refl.successTrainer||'—')}</strong> · Omzet: <strong>${esc(refl.successOmzet||'—')}</strong> · Peringkat: <strong>${esc(refl.successPeringkat||'—')}</strong></p>`;
   h += `</div></div>`;
 
-  // Dream
-  h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Dream</h3></div></div><div class="card-body">`;
-  h += `<div class="field-label">Kapan terakhir membuka buku impian?</div><p class="summary-answer">${esc(refl.dreamLastViewed||'—')}</p>`;
-  h += `<div class="field-label">Apakah masih menggerakkan?</div><p class="summary-answer">${esc(refl.dreamStillMoves||'—')}</p>`;
-  h += `<div class="field-label">Kehidupan 3-5 tahun ke depan</div><p class="summary-answer">${esc(refl.dreamLife3to5||'—')}</p>`;
-  h += `<div class="field-label">Mengapa penting?</div><p class="summary-answer">${esc(refl.dreamWhyImportant||'—')}</p>`;
-  h += `<div class="field-label">Apa yang berubah?</div><p class="summary-answer">${esc(refl.dreamWhatChanges||'—')}</p>`;
-  h += `</div></div>`;
-
-  // Who Will Become Better
+  // Who Will Become Better (after 90-Day Priority)
   h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Who Will Become Better Because of Me?</h3></div></div><div class="card-body">`;
   const people = refl.developPeople || [];
   people.forEach((p,i)=>{
@@ -1189,6 +1174,15 @@ function buildSummaryHtml(resp){
     }
     h += `</div></div>`;
   });
+  h += `</div></div>`;
+
+  // Dream
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Dream</h3></div></div><div class="card-body">`;
+  h += `<div class="field-label">Kapan terakhir membuka buku impian?</div><p class="summary-answer">${esc(refl.dreamLastViewed||'—')}</p>`;
+  h += `<div class="field-label">Apakah masih menggerakkan?</div><p class="summary-answer">${esc(refl.dreamStillMoves||'—')}</p>`;
+  h += `<div class="field-label">Kehidupan 3-5 tahun ke depan</div><p class="summary-answer">${esc(refl.dreamLife3to5||'—')}</p>`;
+  h += `<div class="field-label">Mengapa penting?</div><p class="summary-answer">${esc(refl.dreamWhyImportant||'—')}</p>`;
+  h += `<div class="field-label">Apa yang berubah?</div><p class="summary-answer">${esc(refl.dreamWhatChanges||'—')}</p>`;
   h += `</div></div>`;
 
   // Commitment

@@ -1969,48 +1969,62 @@ function wireMenteeForm(resp){
       logoImg.onerror = function(){ printSummary(content.innerHTML, ''); };
     });
   }
-  function printSummary(html, logoDataUrl){
-    // Remove old frame if exists
-    const oldFrame = document.getElementById('print-frame');
-    if(oldFrame) oldFrame.remove();
+}
 
-    const logoHtml = logoDataUrl ? `<div class="pdf-logo"><img src="${logoDataUrl}"></div>` : '';
-    const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>\u200B</title>
-      <style>
-        @page{ margin:12mm 15mm; }
-        body{font-family:system-ui,-apple-system,sans-serif;margin:0;padding:0;color:#1B1F1A;font-size:13.5px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-        .card{border:1px solid #ddd;border-radius:8px;margin-bottom:10px;break-inside:avoid;overflow:hidden;}
-        .card-head{padding:12px 16px;border-bottom:1px solid #eee;}
-        .card-body{padding:12px 16px;}
-        .tag{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:2px;}
-        h3{margin:0;font-size:15px;} h4{margin:0 0 6px;font-size:13px;}
-        .field-label{font-size:14px;font-weight:700;margin:16px 0 6px;padding-top:12px;border-top:1px solid #eee;}
-        .field-label:first-child{margin-top:0;padding-top:0;border-top:none;}
-        .summary-answer{font-size:13px;margin:2px 0 10px;padding:6px 10px;background:#e3f2fd;border-radius:6px;border:1px solid #bbdefb;}
-        .summary-list{margin:4px 0 12px 20px;font-size:13px;}
-        .summary-list li{margin-bottom:2px;}
-        .summary-sub{margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eee;}
-        .summary-sub:last-child{border-bottom:none;margin-bottom:0;}
-        .success-table{border-collapse:collapse;font-size:13px;}
-        .success-table td{padding:2px 0;}
-        .success-table td:first-child{padding-right:12px;}
-        .success-table td:last-child{font-weight:600;}
-        strong{font-weight:600;}
-        .pdf-logo{text-align:center;margin-bottom:10px;}
-        .pdf-logo img{height:80px;width:auto;}
-      </style></head><body>${logoHtml}${html}</body></html>`;
-    const pf = document.getElementById('print-frame');
-    if(pf) pf.remove();
-    const printFrame = document.createElement('iframe');
-    printFrame.id = 'print-frame';
-    printFrame.style.cssText = 'position:fixed;left:-9999px;top:0;width:0;height:0;border:none;';
-    document.body.appendChild(printFrame);
-    const doc = printFrame.contentDocument || printFrame.contentWindow.document;
-    doc.open();
-    doc.write(fullHtml);
-    doc.close();
-    setTimeout(()=>{ printFrame.contentWindow.print(); }, 300);
-  }
+function printSummary(html, logoDataUrl){
+  const oldFrame = document.getElementById('print-frame');
+  if(oldFrame) oldFrame.remove();
+
+  const logoHtml = logoDataUrl ? `<div class="pdf-logo"><img src="${logoDataUrl}"></div>` : '';
+  const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>\u200B</title>
+    <style>
+      @page{ margin:12mm 15mm; }
+      body{font-family:system-ui,-apple-system,sans-serif;margin:0;padding:0;color:#1B1F1A;font-size:13.5px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+      .card{border:1px solid #ddd;border-radius:8px;margin-bottom:10px;break-inside:avoid;overflow:hidden;}
+      .card-head{padding:12px 16px;border-bottom:1px solid #eee;}
+      .card-body{padding:12px 16px;}
+      .tag{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:2px;}
+      h3{margin:0;font-size:15px;} h4{margin:0 0 6px;font-size:13px;}
+      .field-label{font-size:14px;font-weight:700;margin:16px 0 6px;padding-top:12px;border-top:1px solid #eee;}
+      .field-label:first-child{margin-top:0;padding-top:0;border-top:none;}
+      .summary-answer{font-size:13px;margin:2px 0 10px;padding:6px 10px;background:#e3f2fd;border-radius:6px;border:1px solid #bbdefb;}
+      .summary-list{margin:4px 0 12px 20px;font-size:13px;}
+      .summary-list li{margin-bottom:2px;}
+      .summary-sub{margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eee;}
+      .summary-sub:last-child{border-bottom:none;margin-bottom:0;}
+      .success-table{border-collapse:collapse;font-size:13px;}
+      .success-table td{padding:2px 0;}
+      .success-table td:first-child{padding-right:12px;}
+      .success-table td:last-child{font-weight:600;}
+      strong{font-weight:600;}
+      .pdf-logo{text-align:center;margin-bottom:10px;}
+      .pdf-logo img{height:80px;width:auto;}
+    </style></head><body>${logoHtml}${html}</body></html>`;
+  const printFrame = document.createElement('iframe');
+  printFrame.id = 'print-frame';
+  printFrame.style.cssText = 'position:fixed;left:-9999px;top:0;width:0;height:0;border:none;';
+  document.body.appendChild(printFrame);
+  const doc = printFrame.contentDocument || printFrame.contentWindow.document;
+  doc.open();
+  doc.write(fullHtml);
+  doc.close();
+  setTimeout(()=>{ printFrame.contentWindow.print(); }, 300);
+}
+
+function downloadMenteePdf(menteeId, round){
+  const resp = getResponse(menteeId, round);
+  const html = buildSummaryHtml(resp);
+  const logoImg = new Image();
+  logoImg.crossOrigin = 'anonymous';
+  logoImg.src = 'logo.png';
+  logoImg.onload = function(){
+    const canvas = document.createElement('canvas');
+    canvas.width = logoImg.naturalWidth;
+    canvas.height = logoImg.naturalHeight;
+    canvas.getContext('2d').drawImage(logoImg, 0, 0);
+    printSummary(html, canvas.toDataURL('image/png'));
+  };
+  logoImg.onerror = function(){ printSummary(html, ''); };
 }
 
 function clearMissingOnInput(t){
@@ -2559,7 +2573,10 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
 
   let head = `<div class="detail-header">
     <div><h2>${esc(mentee.name)}</h2><div class="meta">${showMentorName?('Mentor: '+esc(mentor.name)+' · '):''}90-day Build The Pro tracker</div></div>
-    <div class="round-pills">${pills}</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="round-pills">${pills}</div>
+      <button class="btn" onclick="downloadMenteePdf('${menteeId}','${activeRound}')" style="white-space:nowrap;font-size:13px;padding:6px 14px;">📄 Download PDF</button>
+    </div>
   </div>`;
 
   if(!anySubmitted){

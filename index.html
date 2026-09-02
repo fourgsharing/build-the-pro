@@ -1976,10 +1976,10 @@ function wireMenteeForm(resp){
     doc.open();
     doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>\u200B</title>
       <style>
-        @page{ margin:0; }
-        @page:first{ margin:0; }
-        body{font-family:system-ui,-apple-system,sans-serif;margin:0;padding:12mm 15mm;color:#1B1F1A;font-size:13.5px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-        .card{border:1px solid #ddd;border-radius:8px;margin-bottom:10px;break-inside:avoid;overflow:hidden;}
+        @page{ margin:0; size:auto; }
+        body{font-family:system-ui,-apple-system,sans-serif;margin:0;padding:0;color:#1B1F1A;font-size:13.5px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+        .print-wrap{padding:12mm 15mm;}
+        .card{border:1px solid #ddd;border-radius:8px;margin-bottom:10px;break-inside:avoid;overflow:hidden;break-before:auto;padding-top:0;}
         .card-head{padding:12px 16px;border-bottom:1px solid #eee;}
         .card-body{padding:12px 16px;}
         .tag{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:2px;}
@@ -1998,10 +1998,10 @@ function wireMenteeForm(resp){
         strong{font-weight:600;}
         .pdf-logo{text-align:center;margin-bottom:10px;}
         .pdf-logo img{height:80px;width:auto;}
-      </style></head><body>`);
+      </style></head><body><div class="print-wrap">`);
     if(logoDataUrl) doc.write(`<div class="pdf-logo"><img src="${logoDataUrl}"></div>`);
     doc.write(html);
-    doc.write('</body></html>');
+    doc.write('</div></body></html>');
     doc.close();
     setTimeout(()=>{ printFrame.contentWindow.print(); }, 300);
   }

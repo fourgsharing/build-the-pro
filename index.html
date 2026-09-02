@@ -970,7 +970,7 @@ function latestSubmittedRound(menteeId){
    Small helpers
    ============================================================ */
 function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstElementChild; }
-function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function mentorOf(menteeId){ const m = MENTEES.find(x=>x.id===menteeId); return MENTORS.find(x=>x.id===m.mentorId); }
 function menteesOf(mentorId){ return MENTEES.filter(x=>x.mentorId===mentorId); }
 function avg(obj, n){

@@ -533,6 +533,7 @@
       <button data-role="mentor">Mentor</button>
       <button data-role="leader">Leadership</button>
     </div>
+    <span id="user-role-badge" style="display:none;font-size:12px;padding:4px 10px;border-radius:999px;background:var(--accent-skill);color:#fff;font-weight:600;white-space:nowrap;"></span>
     <button class="signout-btn" id="signout-btn" style="display:none;">Sign Out</button>
   </div>
 </div>
@@ -2999,6 +3000,17 @@ function bootApp(role, mentorIdForRole){
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app-shell').style.display = 'block';
   document.getElementById('signout-btn').style.display = '';
+
+  // Show role badge
+  const badge = document.getElementById('user-role-badge');
+  if(role === 'mentor'){
+    const mentor = MENTORS.find(m=>m.id===mentorIdForRole);
+    badge.textContent = 'Mentor: ' + (mentor ? mentor.name : '');
+    badge.style.display = '';
+  } else if(role === 'leadership'){
+    badge.textContent = 'Leadership';
+    badge.style.display = '';
+  }
 
   // Hide mentee tab — mentees use their personal link
   document.querySelector('.role-switch button[data-role="mentee"]').style.display = 'none';

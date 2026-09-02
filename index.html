@@ -1288,7 +1288,7 @@ function validatePage(pageEl){
   personBlocks.forEach((block, i) => {
     const nameInput = block.querySelector('input[data-devp="name"]');
     if(i === 0 || (nameInput && nameInput.value.trim())){
-      block.querySelectorAll('input[data-devp], select[data-devp], textarea[data-devp]').forEach(f => {
+      block.querySelectorAll('input[data-devp], select[data-devp], textarea[data-devp], input[data-devp-target]').forEach(f => {
         f.classList.remove('field-missing');
         if(!f.value.trim()){ f.classList.add('field-missing'); missing.push(f); }
       });

@@ -2129,7 +2129,9 @@ function renderMentorManageMentee(){
   });
 }
 
-function renderMentor(){
+async function renderMentor(){
+  await loadAllFromFirestore();
+  populateDropdowns();
   if(!mentorState.mentorId || !MENTORS.some(m=>m.id===mentorState.mentorId)) mentorState.mentorId = MENTORS.length ? MENTORS[0].id : null;
   if(!mentorState.mentorId){ document.getElementById('mentor-manage').innerHTML='<div class="card"><div class="card-body"><p class="empty-line">No mentors yet. Ask leadership to add one.</p></div></div>'; document.getElementById('mentor-roster').innerHTML=''; document.getElementById('mentor-detail').innerHTML=''; return; }
   renderMentorManageMentee();
@@ -2470,7 +2472,9 @@ function renderManagePeople(){
   });
 }
 
-function renderLeader(){
+async function renderLeader(){
+  await loadAllFromFirestore();
+  populateDropdowns();
   renderManagePeople();
   const list = leaderState.mentorFilter==='all' ? MENTEES : menteesOf(leaderState.mentorFilter);
 

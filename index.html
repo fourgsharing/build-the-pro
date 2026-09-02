@@ -284,6 +284,7 @@
   .summary-answer{ font-size:13.5px; margin:2px 0 14px; padding:6px 10px; background:#e3f2fd; color:#1a1a1a; border-radius:var(--radius-card); border:1px solid #bbdefb; }
   @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .summary-answer{ background:#1a3a5c; color:#eceff1; border-color:#2a5a8c; } }
   :root[data-theme="dark"] .summary-answer{ background:#1a3a5c; color:#eceff1; border-color:#2a5a8c; }
+  .success-row{ padding:3px 0; font-size:13.5px; }
   .summary-sub{ margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
   .summary-sub:last-child{ border-bottom:none; margin-bottom:0; }
   @media print {
@@ -1150,13 +1151,13 @@ function buildSummaryHtml(resp){
   h += `<div class="field-label">Primary Priority</div><p class="summary-answer">${esc(refl.primaryPriority90||'—')}</p>`;
   h += `<div class="field-label">Why?</div><p class="summary-answer">${esc(refl.priorityWhy||'—')}</p>`;
   h += `<div class="field-label">What Would Success Look Like?</div>`;
-  h += `<table class="summary-table"><tbody>`;
-  h += `<tr><td class="summary-qtxt">Tambahan jalur aktif</td><td class="summary-val">${esc(refl.successJalur||'—')}</td></tr>`;
-  h += `<tr><td class="summary-qtxt">Tambahan orang aktif</td><td class="summary-val">${esc(refl.successOrangAktif||'—')}</td></tr>`;
-  h += `<tr><td class="summary-qtxt">Tambahan trainer</td><td class="summary-val">${esc(refl.successTrainer||'—')}</td></tr>`;
-  h += `<tr><td class="summary-qtxt">Omzet</td><td class="summary-val">${esc(refl.successOmzet||'—')}</td></tr>`;
-  h += `<tr><td class="summary-qtxt">Peringkat</td><td class="summary-val">${esc(refl.successPeringkat||'—')}</td></tr>`;
-  h += `</tbody></table>`;
+  h += `<div class="summary-answer">
+    <div class="success-row">Tambahan jalur aktif: <strong>${esc(refl.successJalur||'—')}</strong></div>
+    <div class="success-row">Tambahan orang aktif: <strong>${esc(refl.successOrangAktif||'—')}</strong></div>
+    <div class="success-row">Tambahan trainer: <strong>${esc(refl.successTrainer||'—')}</strong></div>
+    <div class="success-row">Omzet: <strong>${esc(refl.successOmzet||'—')}</strong></div>
+    <div class="success-row">Peringkat: <strong>${esc(refl.successPeringkat||'—')}</strong></div>
+  </div>`;
   h += `</div></div>`;
 
   // Dream
@@ -1174,17 +1175,18 @@ function buildSummaryHtml(resp){
   people.forEach((p,i)=>{
     if(!p.name) return;
     h += `<div class="summary-sub"><h4>Person ${i+1}: ${esc(p.name)}</h4>`;
-    h += `<div class="summary-answer"><strong>Category:</strong> ${esc(p.category||'—')}</div>`;
+    h += `<div class="summary-answer">`;
+    h += `<div style="margin-bottom:6px;"><strong>Category:</strong> ${esc(p.category||'—')}</div>`;
     const conds = Array.isArray(p.conditions) ? p.conditions : [];
     if(conds.length || p.conditionOther) {
-      h += `<div class="summary-answer"><strong>Current condition:</strong> ${[...conds.map(c=>esc(c)), p.conditionOther?'Lain-lain: '+esc(p.conditionOther):''].filter(Boolean).join(', ')}</div>`;
+      h += `<div style="margin-bottom:6px;"><strong>Current condition:</strong> ${[...conds.map(c=>esc(c)), p.conditionOther?'Lain-lain: '+esc(p.conditionOther):''].filter(Boolean).join(', ')}</div>`;
     }
-    h += `<div class="summary-answer"><strong>Biggest gap:</strong> ${esc(p.gap||'—')}</div>`;
+    h += `<div style="margin-bottom:6px;"><strong>Biggest gap:</strong> ${esc(p.gap||'—')}</div>`;
     const targets = (p.targets||[]).filter(t=>t);
     if(targets.length){
-      h += `<div class="summary-answer"><strong>Targets:</strong><ol class="summary-list" style="margin-top:4px;">${targets.map(t=>`<li>${esc(t)}</li>`).join('')}</ol></div>`;
+      h += `<div><strong>Targets:</strong><ol class="summary-list" style="margin-top:4px;margin-bottom:0;">${targets.map(t=>`<li>${esc(t)}</li>`).join('')}</ol></div>`;
     }
-    h += `</div>`;
+    h += `</div></div>`;
   });
   h += `</div></div>`;
 

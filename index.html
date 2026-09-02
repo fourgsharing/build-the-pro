@@ -461,8 +461,8 @@
     <div class="auth-subtitle">Growth Tracker · 90-Day Program</div>
 
     <div id="auth-login-form">
-      <label for="auth-email">Email</label>
-      <input type="email" id="auth-email" placeholder="you@example.com">
+      <label for="auth-email">Email or Username</label>
+      <input type="text" id="auth-email" placeholder="email or username">
       <label for="auth-password">Password</label>
       <input type="password" id="auth-password" placeholder="Password">
       <button class="btn btn-primary" id="auth-login-btn">Sign In</button>
@@ -834,13 +834,34 @@ function uniqueId(base, existing){
   while(existing.some(x=>x.id===id)){ id = base+'-'+n; n++; }
   return id;
 }
-function addMentor(name){
+async function addMentor(name){
   name = name.trim();
   if(!name) return null;
   const id = uniqueId('mentor-'+slugify(name), MENTORS);
   const m = {id, name};
   MENTORS.push(m);
-  db.collection('mentors').doc(id).set({ name: name, createdAt: new Date().toISOString() });
+  await db.collection('mentors').doc(id).set({ name: name, createdAt: new Date().toISOString() });
+
+  // Auto-create login account: email = lowercased name without spaces @buildthepro.app
+  const email = name.toLowerCase().replace(/\s+/g, '') + '@buildthepro.app';
+  const password = '12345678';
+  try{
+    // Use a secondary app so we don't sign out the current (leadership) user
+    const secondaryApp = firebase.apps.find(a=>a.name==='secondary')
+      || firebase.initializeApp(firebaseConfig, 'secondary');
+    const secondaryAuth = secondaryApp.auth();
+    const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+    await db.collection('users').doc(cred.user.uid).set({
+      fullName: name, role: 'mentor', mentorId: id, createdAt: new Date().toISOString()
+    });
+    await secondaryAuth.signOut();
+    const username = name.toLowerCase().replace(/\s+/g, '');
+    toast(`Added ${name}. Login: username "${username}" / password "${password}"`);
+  }catch(e){
+    console.error('Auto-create account failed:', e);
+    toast(`Mentor added but account creation failed: ${e.message}`);
+  }
+
   populateDropdowns();
   return m;
 }
@@ -2402,7 +2423,7 @@ function renderManagePeople(){
       <div class="person-list-title">Existing mentors — click a name to fix a typo</div>
       ${MENTORS.length ? MENTORS.map(m=>`<div class="person-row">
         <input type="text" data-rename-mentor="${m.id}" value="${esc(m.name)}">
-        <span class="person-meta">${menteesOf(m.id).length} mentee${menteesOf(m.id).length===1?'':'s'}</span>
+        <span class="person-meta" style="font-family:var(--font-mono);font-size:11px;color:var(--ink-mute);">${m.name.toLowerCase().replace(/\s+/g,'')} · ${menteesOf(m.id).length} mentee${menteesOf(m.id).length===1?'':'s'}</span>
         <button class="btn-icon" data-remove-mentor="${m.id}" title="Remove mentor">✕</button>
       </div>`).join('') : '<p class="empty-line">No mentors yet.</p>'}
     </div>
@@ -2423,11 +2444,15 @@ function renderManagePeople(){
     </div>
   </div></div>`;
 
-  document.getElementById('add-mentor-btn').addEventListener('click', ()=>{
+  document.getElementById('add-mentor-btn').addEventListener('click', async ()=>{
     const input = document.getElementById('new-mentor-name');
-    const m = addMentor(input.value);
-    if(!m){ toast('Enter a name for the new mentor first.'); return; }
-    toast(`Added ${m.name} as a mentor.`);
+    const btn = document.getElementById('add-mentor-btn');
+    if(!input.value.trim()){ toast('Enter a name for the new mentor first.'); return; }
+    btn.disabled = true; btn.textContent = 'Creating...';
+    const m = await addMentor(input.value);
+    btn.disabled = false; btn.textContent = '+ Add mentor';
+    if(!m) return;
+    input.value = '';
     renderLeader();
   });
   const addMenteeBtn = document.getElementById('add-mentee-btn');
@@ -2548,10 +2573,11 @@ document.getElementById('auth-show-login').addEventListener('click', ()=>{
 });
 
 document.getElementById('auth-forgot-pw').addEventListener('click', async ()=>{
-  const email = document.getElementById('auth-email').value.trim();
+  const raw = document.getElementById('auth-email').value.trim();
   const errEl = document.getElementById('auth-error');
   errEl.textContent = '';
-  if(!email){ errEl.textContent = 'Enter your email address first, then click Forgot password.'; return; }
+  if(!raw){ errEl.textContent = 'Enter your email/username first, then click Forgot password.'; return; }
+  const email = toEmail(raw);
   try{
     await auth.sendPasswordResetEmail(email);
     errEl.style.color = 'var(--accent-skill)';
@@ -2564,12 +2590,18 @@ document.getElementById('auth-forgot-pw').addEventListener('click', async ()=>{
 
 let signupInProgress = false;
 
+function toEmail(input){
+  input = input.trim().toLowerCase();
+  return input.includes('@') ? input : input.replace(/\s+/g,'') + '@buildthepro.app';
+}
+
 document.getElementById('auth-login-btn').addEventListener('click', async ()=>{
-  const email = document.getElementById('auth-email').value.trim();
+  const raw = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   const errEl = document.getElementById('auth-error');
   errEl.textContent = '';
-  if(!email || !password){ errEl.textContent = 'Please enter email and password.'; return; }
+  if(!raw || !password){ errEl.textContent = 'Please enter email/username and password.'; return; }
+  const email = toEmail(raw);
   try{
     await auth.signInWithEmailAndPassword(email, password);
     // onAuthStateChanged will handle the rest

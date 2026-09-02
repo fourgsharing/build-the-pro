@@ -1997,20 +1997,17 @@ function wireMenteeForm(resp){
         .pdf-logo{text-align:center;margin-bottom:10px;}
         .pdf-logo img{height:80px;width:auto;}
       </style></head><body>${logoHtml}${html}</body></html>`;
-    const blob = new Blob([fullHtml], {type:'text/html'});
-    const blobUrl = URL.createObjectURL(blob);
-    const win = window.open(blobUrl, '_blank');
-    if(win){
-      win.onload = ()=>{ setTimeout(()=>{ win.print(); win.onafterprint = ()=>{ win.close(); URL.revokeObjectURL(blobUrl); }; }, 400); };
-    } else {
-      // Popup blocked — fall back to iframe
-      const printFrame = document.getElementById('print-frame') || document.createElement('iframe');
-      printFrame.id = 'print-frame';
-      printFrame.style.cssText = 'position:fixed;left:-9999px;top:0;width:0;height:0;border:none;';
-      printFrame.src = blobUrl;
-      document.body.appendChild(printFrame);
-      printFrame.onload = ()=>{ setTimeout(()=>{ printFrame.contentWindow.print(); URL.revokeObjectURL(blobUrl); }, 300); };
-    }
+    const pf = document.getElementById('print-frame');
+    if(pf) pf.remove();
+    const printFrame = document.createElement('iframe');
+    printFrame.id = 'print-frame';
+    printFrame.style.cssText = 'position:fixed;left:-9999px;top:0;width:0;height:0;border:none;';
+    document.body.appendChild(printFrame);
+    const doc = printFrame.contentDocument || printFrame.contentWindow.document;
+    doc.open();
+    doc.write(fullHtml);
+    doc.close();
+    setTimeout(()=>{ printFrame.contentWindow.print(); }, 300);
   }
 }
 

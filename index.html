@@ -1109,9 +1109,15 @@ function validatePage(pageEl){
   const checklistErrors = [];
   checklistChecks.forEach(c => {
     const all = pageEl.querySelectorAll(c.sel);
-    if(all.length <= 3) return;
+    if(all.length < 3) return; // fewer than 3 options — can't require 3
     const checked = [...all].filter(el => el.checked).length;
-    if(checked !== 3) checklistErrors.push(`${c.label}: pilih tepat 3 (saat ini ${checked} dipilih)`);
+    if(all.length === 3){
+      // exactly 3 options — all must be selected
+      if(checked !== 3) checklistErrors.push(`${c.label}: pilih semua 3`);
+    } else {
+      // more than 3 options — exactly 3 must be selected
+      if(checked !== 3) checklistErrors.push(`${c.label}: pilih tepat 3 (saat ini ${checked} dipilih)`);
+    }
   });
 
   // 3. Required textareas and text inputs (data-refl-single)

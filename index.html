@@ -1092,11 +1092,13 @@ const FORM_PAGE_TITLES = [
 ];
 let currentFormPage = 1;
 
-function buildSummaryHtml(resp){
+function buildSummaryHtml(resp, overrideMenteeId, overrideRound){
   const refl = resp.reflections;
-  const mentee = MENTEES.find(m=>m.id===menteeState.id);
+  const mId = overrideMenteeId || (typeof menteeState!=='undefined' && menteeState.id);
+  const rKey = overrideRound || (typeof menteeState!=='undefined' && menteeState.round);
+  const mentee = MENTEES.find(m=>m.id===mId);
   const mentor = mentee ? mentorOf(mentee.id) : null;
-  const round = ROUNDS.find(r=>r.key===menteeState.round);
+  const round = ROUNDS.find(r=>r.key===rKey);
   let h = '';
 
   h += `<div class="summary-wrap">`;
@@ -2013,7 +2015,7 @@ function printSummary(html, logoDataUrl){
 
 function downloadMenteePdf(menteeId, round){
   const resp = getResponse(menteeId, round);
-  const html = buildSummaryHtml(resp);
+  const html = buildSummaryHtml(resp, menteeId, round);
   const logoImg = new Image();
   logoImg.crossOrigin = 'anonymous';
   logoImg.src = 'logo.png';

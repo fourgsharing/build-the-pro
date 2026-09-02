@@ -260,6 +260,8 @@
 
   .gap-block{ border:1px solid var(--border); border-radius:var(--radius-ctl); padding:12px 14px; margin-bottom:10px; background:var(--surface-2); }
   .gap-block h4{ font-size:12.5px; color:var(--ink); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
+  .develop-person-block{ color:var(--ink); }
+  .develop-person-block label{ color:var(--ink); }
   .gap-grid{ display:grid; grid-template-columns:1fr 100px 100px; gap:8px; margin-bottom:8px; }
   .gap-grid label{ font-size:10.5px; color:var(--ink-mute); text-transform:uppercase; display:block; margin-bottom:3px; }
   .field-label{ font-size:16px; color:var(--ink); margin:28px 0 8px; font-weight:700; padding-top:20px; border-top:2px solid var(--border); }
@@ -279,7 +281,9 @@
   .summary-val{ width:40px; text-align:center; font-weight:600; font-family:var(--font-mono); }
   .summary-list{ margin:4px 0 14px 20px; font-size:13px; }
   .summary-list li{ margin-bottom:3px; }
-  .summary-answer{ font-size:13.5px; margin:2px 0 14px; padding:6px 10px; background:var(--surface); border-radius:var(--radius-card); border:1px solid var(--border); }
+  .summary-answer{ font-size:13.5px; margin:2px 0 14px; padding:6px 10px; background:#e3f2fd; color:#1a1a1a; border-radius:var(--radius-card); border:1px solid #bbdefb; }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .summary-answer{ background:#1a3a5c; color:#eceff1; border-color:#2a5a8c; } }
+  :root[data-theme="dark"] .summary-answer{ background:#1a3a5c; color:#eceff1; border-color:#2a5a8c; }
   .summary-sub{ margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
   .summary-sub:last-child{ border-bottom:none; margin-bottom:0; }
   @media print {
@@ -1103,19 +1107,6 @@ function buildSummaryHtml(resp){
     </p>
   </div></div>`;
 
-  // Part 1: Skill scores
-  h += `<div class="card"><div class="card-head"><div><div class="tag">Part 1</div><h3>What Can I Really Do? — Skill Scores</h3></div></div><div class="card-body">`;
-  SKILL_SECTIONS.forEach(sec=>{
-    h += `<div class="q-section-title">${esc(sec.title)}</div>`;
-    h += `<table class="summary-table"><tbody>`;
-    for(let i=sec.from;i<=sec.to;i++){
-      const v = resp.skill[i] || '—';
-      h += `<tr><td class="summary-qnum">${i}.</td><td class="summary-qtxt">${esc(SKILL_QUESTIONS[i-1])}</td><td class="summary-val">${esc(v)}</td></tr>`;
-    }
-    h += `</tbody></table>`;
-  });
-  h += `</div></div>`;
-
   // Reflection: Strengths & Gaps
   h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Strengths &amp; Gaps</h3></div></div><div class="card-body">`;
   h += `<div class="field-label">MY STRENGTHS</div><ul class="summary-list">${(refl.strengths||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
@@ -1124,19 +1115,6 @@ function buildSummaryHtml(resp){
   h += `<div class="field-label">Aktivitas yang sudah dikuasai dengan baik</div><p class="summary-answer">${esc(refl.lastQ1||'—')}</p>`;
   h += `<div class="field-label">Aktivitas yang masih butuh bantuan</div><p class="summary-answer">${esc(refl.lastQ2||'—')}</p>`;
   h += `<div class="field-label">3 kemampuan paling berdampak untuk 90 hari</div><p class="summary-answer">${esc(refl.lastQ3||'—')}</p>`;
-  h += `</div></div>`;
-
-  // Part 2: Drive scores
-  h += `<div class="card"><div class="card-head"><div><div class="tag">Part 2</div><h3>What Makes Me Move? — Drive Scores</h3></div></div><div class="card-body">`;
-  DRIVE_SECTIONS.forEach(sec=>{
-    h += `<div class="q-section-title">${esc(sec.title)}</div>`;
-    h += `<table class="summary-table"><tbody>`;
-    for(let i=sec.from;i<=sec.to;i++){
-      const v = resp.drive[i] || '—';
-      h += `<tr><td class="summary-qnum">${i}.</td><td class="summary-qtxt">${esc(DRIVE_QUESTIONS[i-1])}</td><td class="summary-val">${esc(v)}</td></tr>`;
-    }
-    h += `</tbody></table>`;
-  });
   h += `</div></div>`;
 
   // Reflection: Drivers

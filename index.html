@@ -1214,8 +1214,16 @@ function buildSummaryHtml(resp, overrideMenteeId, overrideRound){
   </div></div>`;
 
   // Gauge Charts — clean donut style
-  function gaugeDonut(val, max, color, label){
+  function scoreColor(v){
+    if(v<1) return '#e53935';      // red
+    if(v<2) return '#fb8c00';      // orange
+    if(v<3) return '#fdd835';      // yellow
+    if(v<4) return '#7cb342';      // light green
+    return '#2e7d32';              // green
+  }
+  function gaugeDonut(val, max, label){
     const v = val===null?0:val;
+    const color = scoreColor(v);
     const pct = Math.min(v/max, 1);
     const r = 44, cx = 55, cy = 55, stroke = 10;
     const circ = 2 * Math.PI * r;
@@ -1235,9 +1243,9 @@ function buildSummaryHtml(resp, overrideMenteeId, overrideRound){
   }
   h += `<div class="card" style="break-inside:avoid;"><div class="card-head"><div><div class="tag">Overview</div><h3>SCORE SUMMARY</h3></div></div>
     <div class="card-body" style="display:flex;justify-content:center;align-items:flex-start;gap:30px;flex-wrap:wrap;padding:24px 16px;">
-      ${gaugeDonut(skillAvg, 5, '#4CAF50', 'What Can I Really Do?<br>(Strengths & Gaps)')}
-      ${gaugeDonut(driveAvg, 5, '#2196F3', 'What Makes Me Move?<br>(Drivers)')}
-      ${gaugeDonut(overallAvg, 5, '#FF9800', 'Overall<br>Score')}
+      ${gaugeDonut(skillAvg, 5, 'What Can I Really Do?<br>(Strengths & Gaps)')}
+      ${gaugeDonut(driveAvg, 5, 'What Makes Me Move?<br>(Drivers)')}
+      ${gaugeDonut(overallAvg, 5, 'Overall<br>Score')}
     </div>
   </div>`;
 

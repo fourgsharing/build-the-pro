@@ -1099,18 +1099,21 @@ function buildSummaryHtml(resp, overrideMenteeId, overrideRound){
   const mentee = MENTEES.find(m=>m.id===mId);
   const mentor = mentee ? mentorOf(mentee.id) : null;
   const round = ROUNDS.find(r=>r.key===rKey);
+  const skillAvg = avg(resp.skill);
+  const driveAvg = avg(resp.drive);
+  const overallAvg = (skillAvg!==null && driveAvg!==null) ? (skillAvg+driveAvg)/2 : (skillAvg||driveAvg);
   let h = '';
 
   h += `<div class="summary-wrap">`;
   h += `<div class="summary-header" style="text-align:center;padding:10px 0 6px;">
-    <h2 style="margin:0 0 2px;font-size:18px;">Build The Pro — Growth Tracker</h2>
+    <h2 style="margin:0 0 2px;font-size:27px;text-transform:uppercase;letter-spacing:.04em;">BUILD THE PRO — GROWTH TRACKER</h2>
     <p style="margin:0;color:var(--ink-mute);font-size:13px;">
       ${esc(mentee?mentee.name:'')} ${mentor?'• Mentor: '+esc(mentor.name):''} ${round?'• Round: '+esc(round.short):''}
     </p>
   </div>`;
 
   // Reflection: Strengths & Gaps
-  h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Strengths &amp; Gaps</h3></div></div><div class="card-body">`;
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>WHAT CAN I REALLY DO? (STRENGTHS &amp; GAPS)</h3></div><div style="font-size:14px;font-weight:700;white-space:nowrap;">SCORE: ${fmt1(skillAvg)} / 5</div></div><div class="card-body">`;
   h += `<div class="field-label">MY STRENGTHS</div><ul class="summary-list">${(refl.strengths||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
   h += `<div class="field-label">MY DEVELOPMENT AREAS</div><ul class="summary-list">${(refl.devAreas||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
   h += `<div class="field-label">MY SKILL GAPS</div><ul class="summary-list">${(refl.gaps||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
@@ -1120,7 +1123,7 @@ function buildSummaryHtml(resp, overrideMenteeId, overrideRound){
   h += `</div></div>`;
 
   // Reflection: Drivers
-  h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>Drivers</h3></div></div><div class="card-body">`;
+  h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>WHAT MAKES ME MOVE? (DRIVERS)</h3></div><div style="font-size:14px;font-weight:700;white-space:nowrap;">SCORE: ${fmt1(driveAvg)} / 5</div></div><div class="card-body">`;
   h += `<div class="field-label">MY ACTIVE DRIVERS</div><ul class="summary-list">${(refl.activeDrivers||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
   h += `<div class="field-label">DRIVERS TO STRENGTHEN</div><ul class="summary-list">${(refl.driversToStrengthen||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
   h += `<div class="field-label">MOVEMENT BLOCKERS</div>`;
@@ -1205,6 +1208,38 @@ function buildSummaryHtml(resp, overrideMenteeId, overrideRound){
       <div><strong>Tanggal:</strong> ${today}</div>
     </div>
   </div></div>`;
+
+  // Gauge Charts
+  function gaugeArc(val, max, color, label){
+    const v = val===null?0:val;
+    const pct = Math.min(v/max, 1);
+    const r = 60, cx = 75, cy = 70, stroke = 12;
+    const startAngle = Math.PI;
+    const endAngle = Math.PI + Math.PI * pct;
+    const bgEndAngle = Math.PI * 2;
+    const x1bg = cx + r * Math.cos(startAngle), y1bg = cy + r * Math.sin(startAngle);
+    const x2bg = cx + r * Math.cos(bgEndAngle), y2bg = cy + r * Math.sin(bgEndAngle);
+    const x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle), y2 = cy + r * Math.sin(endAngle);
+    const largeArcBg = 1;
+    const largeArc = pct > 0.5 ? 1 : 0;
+    return `<div style="text-align:center;flex:1;min-width:150px;">
+      <svg width="150" height="100" viewBox="0 0 150 100">
+        <path d="M ${x1bg} ${y1bg} A ${r} ${r} 0 ${largeArcBg} 1 ${x2bg} ${y2bg}" fill="none" stroke="#e0e0e0" stroke-width="${stroke}" stroke-linecap="round"/>
+        ${pct>0?`<path d="M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round"/>`:''}
+        <text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="22" font-weight="700" fill="#333">${fmt1(v)}</text>
+        <text x="${cx}" y="${cy+14}" text-anchor="middle" font-size="11" fill="#888">/ ${max}</text>
+      </svg>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px;line-height:1.3;">${label}</div>
+    </div>`;
+  }
+  h += `<div class="card" style="break-inside:avoid;"><div class="card-head"><div><div class="tag">Overview</div><h3>SCORE SUMMARY</h3></div></div>
+    <div class="card-body" style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;padding:20px 16px;">
+      ${gaugeArc(skillAvg, 5, '#4CAF50', 'WHAT CAN I REALLY DO?<br>(STRENGTHS & GAPS)')}
+      ${gaugeArc(driveAvg, 5, '#2196F3', 'WHAT MAKES ME MOVE?<br>(DRIVERS)')}
+      ${gaugeArc(overallAvg, 5, '#FF9800', 'OVERALL<br>SCORE')}
+    </div>
+  </div>`;
 
   h += `</div>`; // close summary-wrap
   return h;
@@ -1983,7 +2018,7 @@ function printSummary(html, logoDataUrl){
       @page{ margin:12mm 15mm; }
       body{font-family:system-ui,-apple-system,sans-serif;margin:0;padding:0;color:#1B1F1A;font-size:13.5px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
       .card{border:1px solid #ddd;border-radius:8px;margin-bottom:10px;break-inside:avoid;overflow:hidden;}
-      .card-head{padding:12px 16px;border-bottom:1px solid #eee;}
+      .card-head{padding:12px 16px;border-bottom:1px solid #eee;display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
       .card-body{padding:12px 16px;}
       .tag{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:2px;}
       h3{margin:0;font-size:15px;} h4{margin:0 0 6px;font-size:13px;}

@@ -1225,10 +1225,9 @@ function buildSummaryHtml(resp, overrideMenteeId, overrideRound){
     const v = val===null?0:val;
     const color = scoreColor(v);
     const pct = Math.min(v/max, 1);
-    // Semicircle gauge: arc from 180° to 0° (left to right)
-    const cx = 80, cy = 72, r = 58, sw = 14;
-    // Band colors for the background segments (5 equal bands)
-    const bands = ['#ef9a9a','#ffe0b2','#fff9c4','#c5e1a5','#a5d6a7'];
+    const cx = 90, cy = 82, r = 60, sw = 16;
+    // Band colors (full opacity)
+    const bands = ['#ef5350','#ffa726','#ffee58','#9ccc65','#66bb6a'];
     const bandAngle = Math.PI / 5;
     let bandPaths = '';
     for(let i=0;i<5;i++){
@@ -1236,28 +1235,29 @@ function buildSummaryHtml(resp, overrideMenteeId, overrideRound){
       const a2 = Math.PI - (i+1) * bandAngle;
       const x1 = cx + r * Math.cos(a1), y1 = cy - r * Math.sin(a1);
       const x2 = cx + r * Math.cos(a2), y2 = cy - r * Math.sin(a2);
-      bandPaths += `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="${bands[i]}" stroke-width="${sw}" stroke-opacity="0.5"/>`;
+      bandPaths += `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="${bands[i]}" stroke-width="${sw}"/>`;
     }
     // Needle
     const needleAngle = Math.PI - (pct * Math.PI);
-    const needleLen = r - 6;
+    const needleLen = r - 8;
     const nx = cx + needleLen * Math.cos(needleAngle);
     const ny = cy - needleLen * Math.sin(needleAngle);
     // Tick labels
     let ticks = '';
     for(let i=0;i<=5;i++){
       const a = Math.PI - (i/5) * Math.PI;
-      const tx = cx + (r + 14) * Math.cos(a);
-      const ty = cy - (r + 14) * Math.sin(a);
-      ticks += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="middle" font-size="9" fill="#999">${i}</text>`;
+      const tx = cx + (r + 16) * Math.cos(a);
+      const ty = cy - (r + 16) * Math.sin(a) + 3;
+      ticks += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="middle" font-size="10" fill="#666">${i}</text>`;
     }
-    return `<div style="text-align:center;flex:1;min-width:160px;max-width:200px;">
-      <svg width="160" height="105" viewBox="0 0 160 105">
+    return `<div style="text-align:center;flex:1;min-width:170px;max-width:210px;">
+      <svg width="180" height="130" viewBox="0 0 180 130">
         ${bandPaths}
         ${ticks}
-        <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
-        <circle cx="${cx}" cy="${cy}" r="4" fill="${color}"/>
-        <text x="${cx}" y="${cy+18}" text-anchor="middle" font-size="22" font-weight="700" fill="#333">${fmt1(v)}</text>
+        <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="${cx}" cy="${cy}" r="5" fill="${color}"/>
+        <circle cx="${cx}" cy="${cy}" r="2" fill="#fff"/>
+        <text x="${cx}" y="${cy+22}" text-anchor="middle" font-size="24" font-weight="700" fill="#333">${fmt1(v)}</text>
       </svg>
       <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:0;line-height:1.35;color:#555;">${label}</div>
     </div>`;

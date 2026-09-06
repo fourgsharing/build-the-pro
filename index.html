@@ -2432,12 +2432,29 @@ function trendChart(seriesA, seriesB, labels){
   function markers(series, klass){
     return series.filter(p=>p.y!==null).map(p=>`<circle cx="${x(p.x)}" cy="${y(p.y)}" r="4" class="${klass}-dot"/>`).join('');
   }
-  function endLabel(series, klass){
-    const pts = series.filter(p=>p.y!==null);
-    if(!pts.length) return '';
-    const last = pts[pts.length-1];
-    return `<circle cx="${x(last.x)+0}" cy="${y(last.y)}" r="4.5" class="${klass}-dot"/>
-      <text x="${x(last.x)+9}" y="${y(last.y)+4}" class="chart-endlabel">${last.y.toFixed(1)}</text>`;
+  function endLabels(seriesA, seriesB){
+    const ptsA = seriesA.filter(p=>p.y!==null);
+    const ptsB = seriesB.filter(p=>p.y!==null);
+    let out = '';
+    const lastA = ptsA.length ? ptsA[ptsA.length-1] : null;
+    const lastB = ptsB.length ? ptsB[ptsB.length-1] : null;
+    let yA = lastA ? y(lastA.y) : null;
+    let yB = lastB ? y(lastB.y) : null;
+    // If both exist and too close, offset them apart
+    if(yA!==null && yB!==null && Math.abs(yA - yB) < 16){
+      const mid = (yA + yB) / 2;
+      yA = mid - 9;
+      yB = mid + 9;
+    }
+    if(lastA){
+      out += `<circle cx="${x(lastA.x)}" cy="${y(lastA.y)}" r="4.5" class="skill-dot"/>
+        <text x="${x(lastA.x)+9}" y="${yA+4}" class="chart-endlabel">${lastA.y.toFixed(1)}</text>`;
+    }
+    if(lastB){
+      out += `<circle cx="${x(lastB.x)}" cy="${y(lastB.y)}" r="4.5" class="drive-dot"/>
+        <text x="${x(lastB.x)+9}" y="${yB+4}" class="chart-endlabel">${lastB.y.toFixed(1)}</text>`;
+    }
+    return out;
   }
 
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block">
@@ -2453,7 +2470,7 @@ function trendChart(seriesA, seriesB, labels){
     ${grid}${xlabels}
     ${a.d?`<path d="${a.d}" class="skill-line"/>`:''}${markers(a.pts,'skill')}
     ${b.d?`<path d="${b.d}" class="drive-line"/>`:''}${markers(b.pts,'drive')}
-    ${endLabel(a.pts,'skill')}${endLabel(b.pts,'drive')}
+    ${endLabels(a.pts, b.pts)}
   </svg>`;
 }
 

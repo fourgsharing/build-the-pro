@@ -2540,56 +2540,16 @@ function renderMentorManageMentee(){
   const mentor = MENTORS.find(m=>m.id===mentorState.mentorId);
   const myMentees = menteesOf(mentorState.mentorId);
   wrap.innerHTML = `<div class="card"><div class="card-head">
-      <div><div class="tag">Mentor</div><h3>Add My Mentee</h3></div>
+      <div><div class="tag">Mentor</div><h3>My Mentees</h3></div>
     </div><div class="card-body">
-    <div style="display:flex;gap:8px;">
-      <input type="text" id="new-my-mentee-name" placeholder="Mentee's full name" style="flex:1;">
-      <button class="btn btn-primary btn-sm" id="add-my-mentee-btn">+ Add mentee</button>
-    </div>
-    <p class="hint" style="margin:12px 0 0;">Added here as ${mentor?esc(mentor.name):'this mentor'}'s own mentee. After adding, use the link buttons below to share their personal questionnaire link.</p>
-
     <div class="person-list">
-      <div class="person-list-title">My mentees — click a name to fix a typo, use 🔗 to copy their questionnaire link</div>
       ${myMentees.length ? myMentees.map(m=>{
-        const nextRound = ROUNDS.find(r=>!hasSubmission(m.id,r.key));
         return `<div class="person-row">
-        <input type="text" data-rename-mentee="${m.id}" value="${esc(m.name)}">
-        <select data-link-round="${m.id}" style="font-size:13px;padding:4px 6px;border-radius:6px;border:1px solid var(--border);width:90px;">
-          ${ROUNDS.map(r=>`<option value="${r.key}" ${nextRound&&r.key===nextRound.key?'selected':''}>${r.short}${hasSubmission(m.id,r.key)?' ✓':''}</option>`).join('')}
-        </select>
-        <button class="btn btn-primary btn-sm" data-copy-link="${m.id}" title="Copy questionnaire link" style="white-space:nowrap;">🔗 Copy link</button>
-        <button class="btn-icon" data-remove-mentee="${m.id}" title="Remove mentee">✕</button>
+        <span style="flex:1;font-size:14px;font-weight:500;">${esc(m.name)}</span>
+        <span class="person-meta">${hasSubmission(m.id,'before')?'Submitted':'Pending'}</span>
       </div>`}).join('') : '<p class="empty-line">No mentees yet.</p>'}
     </div>
   </div></div>`;
-
-  document.getElementById('add-my-mentee-btn').addEventListener('click', ()=>{
-    const input = document.getElementById('new-my-mentee-name');
-    const m = addMentee(input.value, mentorState.mentorId);
-    if(!m){ toast('Enter a name for the new mentee first.'); return; }
-    toast(`Added ${m.name} as your mentee.`);
-    mentorState.menteeId = m.id;
-    mentorState.round = null;
-    renderMentor();
-  });
-  wirePersonRows(wrap);
-
-  // Wire copy-link buttons
-  wrap.querySelectorAll('[data-copy-link]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const menteeId = btn.dataset.copyLink;
-      const roundSel = wrap.querySelector(`[data-link-round="${menteeId}"]`);
-      const round = roundSel ? roundSel.value : 'before';
-      const menteeName = MENTEES.find(m=>m.id===menteeId)?.name || menteeId;
-      const base = window.location.origin + window.location.pathname;
-      const link = `${base}?mentee=${encodeURIComponent(menteeId)}&round=${encodeURIComponent(round)}`;
-      navigator.clipboard.writeText(link).then(()=>{
-        toast(`Link copied for ${menteeName} (${ROUNDS.find(r=>r.key===round)?.short || round})`);
-      }).catch(()=>{
-        prompt('Copy this link:', link);
-      });
-    });
-  });
 }
 
 function renderMentor(){

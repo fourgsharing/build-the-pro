@@ -2440,11 +2440,16 @@ function trendChart(seriesA, seriesB, labels){
     const lastB = ptsB.length ? ptsB[ptsB.length-1] : null;
     let yA = lastA ? y(lastA.y) : null;
     let yB = lastB ? y(lastB.y) : null;
-    // If both exist and too close, offset them apart
+    // If both exist and too close, spread apart; higher score (smaller y) goes on top
     if(yA!==null && yB!==null && Math.abs(yA - yB) < 16){
       const mid = (yA + yB) / 2;
-      yA = mid - 9;
-      yB = mid + 9;
+      if(lastA.y >= lastB.y){ // A has higher or equal score → A label goes up (smaller y)
+        yA = mid - 9;
+        yB = mid + 9;
+      } else {
+        yA = mid + 9;
+        yB = mid - 9;
+      }
     }
     if(lastA){
       out += `<circle cx="${x(lastA.x)}" cy="${y(lastA.y)}" r="4.5" class="skill-dot"/>

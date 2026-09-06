@@ -2616,13 +2616,12 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
   const nb = (val) => val ? `<p>${esc(val)}</p>` : '<p class="empty-line">Not filled in.</p>';
 
   // Part 1: Skill Scores
+  const skillLegend = `<div class="scale-legend">${SCALE_SKILL.map(s=>`<div class="sl-item"><span class="sl-num">${s.v}</span><span class="sl-txt">${esc(s.m)}</span></div>`).join('')}</div>`;
   out += `<div class="card"><div class="card-head"><div><div class="tag">Part 1 · ${roundLabel}</div><h3>What Can I Really Do? — Skill Scores</h3></div></div>
     <div class="card-body">
+    ${skillLegend}
     <details class="answers-toggle" open>
       <summary>All 35 skill questions (${Object.keys(resp.skill).length} answered)</summary>
-      <div class="scale-legend">
-        ${SCALE_SKILL.map(s=>`<div class="sl-item"><span class="sl-num">${s.v}</span><span class="sl-txt">${esc(s.m)}</span></div>`).join('')}
-      </div>
       <div class="answers-list">${fullAnswersHtml(resp,'skill')}</div>
     </details>
     </div></div>`;
@@ -2641,11 +2640,9 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
   // Part 2: Drive Scores
   out += `<div class="card"><div class="card-head"><div><div class="tag">Part 2 · ${roundLabel}</div><h3>What Makes Me Move? — Drive Scores</h3></div></div>
     <div class="card-body">
+    ${`<div class="scale-legend">${SCALE_DRIVE.map(s=>`<div class="sl-item"><span class="sl-num">${s.v}</span><span class="sl-txt">${esc(s.m)}</span></div>`).join('')}</div>`}
     <details class="answers-toggle" open>
       <summary>All 15 drive questions (${Object.keys(resp.drive).length} answered)</summary>
-      <div class="scale-legend">
-        ${SCALE_DRIVE.map(s=>`<div class="sl-item"><span class="sl-num">${s.v}</span><span class="sl-txt">${esc(s.m)}</span></div>`).join('')}
-      </div>
       <div class="answers-list">${fullAnswersHtml(resp,'drive')}</div>
     </details>
     </div></div>`;

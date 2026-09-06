@@ -1031,6 +1031,7 @@ function avg(obj, n){
   return vals.reduce((a,b)=>a+b,0)/vals.length;
 }
 function fmt1(n){ return n===null||n===undefined ? '—' : n.toFixed(1); }
+function fmtNum(s){ if(!s) return s; const n=String(s).replace(/\./g,'').replace(/,/g,''); if(!/^\d+$/.test(n)) return s; return n.replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
 function toast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -1169,7 +1170,7 @@ function buildSummaryHtml(resp, overrideMenteeId, overrideRound){
     <tr><td>Tambahan jalur aktif</td><td><strong>${esc(refl.successJalur||'—')}</strong></td></tr>
     <tr><td>Tambahan orang aktif</td><td><strong>${esc(refl.successOrangAktif||'—')}</strong></td></tr>
     <tr><td>Tambahan trainer</td><td><strong>${esc(refl.successTrainer||'—')}</strong></td></tr>
-    <tr><td>Omzet</td><td><strong>${esc(refl.successOmzet||'—')}</strong></td></tr>
+    <tr><td>Omzet</td><td><strong>${esc(fmtNum(refl.successOmzet)||refl.successOmzet||'—')}</strong></td></tr>
     <tr><td>Peringkat</td><td><strong>${esc(refl.successPeringkat||'—')}</strong></td></tr>
   </table></div>`;
   h += `</div></div>`;
@@ -1623,7 +1624,7 @@ function renderMenteeForm(){
     <label style="font-size:13px;display:block;margin:10px 0 4px;">Berapa tambahan trainer?</label>
     <input type="text" data-refl-single="successTrainer" value="${esc(refl.successTrainer||'')}" placeholder="...">
     <label style="font-size:13px;display:block;margin:10px 0 4px;">Omzet?</label>
-    <input type="text" data-refl-single="successOmzet" value="${esc(refl.successOmzet||'')}" placeholder="...">
+    <input type="text" data-refl-single="successOmzet" value="${esc(fmtNum(refl.successOmzet)||'')}" placeholder="..." onblur="this.value=fmtNum(this.value)||this.value">
     <label style="font-size:13px;display:block;margin:10px 0 4px;">Peringkat?</label>
     <input type="text" data-refl-single="successPeringkat" value="${esc(refl.successPeringkat||'')}" placeholder="...">
   </div></div>`;
@@ -2676,7 +2677,7 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     <div class="refl-block"><h4>Primary Priority</h4>${nb(refl.primaryPriority90)}</div>
     <div class="refl-block"><h4>Why?</h4>${nb(refl.priorityWhy)}</div>
     <div class="refl-block"><h4>What Would Success Look Like?</h4>
-      ${(refl.successJalur||refl.successOrangAktif||refl.successTrainer||refl.successOmzet||refl.successPeringkat)?`<p>Jalur aktif: <b>${esc(refl.successJalur||'—')}</b> · Orang aktif: <b>${esc(refl.successOrangAktif||'—')}</b> · Trainer: <b>${esc(refl.successTrainer||'—')}</b> · Omzet: <b>${esc(refl.successOmzet||'—')}</b> · Peringkat: <b>${esc(refl.successPeringkat||'—')}</b></p>`:'<p class="empty-line">Not filled in.</p>'}
+      ${(refl.successJalur||refl.successOrangAktif||refl.successTrainer||refl.successOmzet||refl.successPeringkat)?`<p>Jalur aktif: <b>${esc(refl.successJalur||'—')}</b> · Orang aktif: <b>${esc(refl.successOrangAktif||'—')}</b> · Trainer: <b>${esc(refl.successTrainer||'—')}</b> · Omzet: <b>${esc(fmtNum(refl.successOmzet)||refl.successOmzet||'—')}</b> · Peringkat: <b>${esc(refl.successPeringkat||'—')}</b></p>`:'<p class="empty-line">Not filled in.</p>'}
     </div>
     </div></div>`;
 

@@ -410,6 +410,11 @@
   details.answers-toggle summary:hover{ color:var(--accent-skill); }
   details.answers-toggle[open] summary{ margin-bottom:4px; }
   .answers-list{ padding-top:4px; }
+  .scale-legend{ display:flex; gap:0; position:sticky; top:0; z-index:5; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-ctl); margin-bottom:10px; font-size:11px; text-align:center; }
+  .scale-legend .sl-item{ flex:1; padding:6px 4px; border-right:1px solid var(--border); line-height:1.3; }
+  .scale-legend .sl-item:last-child{ border-right:none; }
+  .scale-legend .sl-num{ font-weight:700; font-size:13px; display:block; margin-bottom:2px; }
+  .scale-legend .sl-txt{ color:var(--ink-mute); font-size:9.5px; text-transform:uppercase; }
   .ans-row{ display:grid; grid-template-columns:1fr auto; gap:16px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--border); }
   .ans-row:last-child{ border-bottom:none; }
   .ans-q{ font-family:var(--font-serif); font-size:13.5px; color:var(--ink); display:flex; gap:7px; align-items:baseline; }
@@ -2615,6 +2620,9 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     <div class="card-body">
     <details class="answers-toggle" open>
       <summary>All 35 skill questions (${Object.keys(resp.skill).length} answered)</summary>
+      <div class="scale-legend">
+        ${SCALE_SKILL.map(s=>`<div class="sl-item"><span class="sl-num">${s.v}</span><span class="sl-txt">${esc(s.m)}</span></div>`).join('')}
+      </div>
       <div class="answers-list">${fullAnswersHtml(resp,'skill')}</div>
     </details>
     </div></div>`;
@@ -2635,6 +2643,9 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     <div class="card-body">
     <details class="answers-toggle" open>
       <summary>All 15 drive questions (${Object.keys(resp.drive).length} answered)</summary>
+      <div class="scale-legend">
+        ${SCALE_DRIVE.map(s=>`<div class="sl-item"><span class="sl-num">${s.v}</span><span class="sl-txt">${esc(s.m)}</span></div>`).join('')}
+      </div>
       <div class="answers-list">${fullAnswersHtml(resp,'drive')}</div>
     </details>
     </div></div>`;

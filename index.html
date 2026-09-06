@@ -2409,73 +2409,34 @@ document.getElementById('mentee-clear-btn').addEventListener('click', function()
 /* ============================================================
    CHART HELPERS (inline SVG)
    ============================================================ */
-function trendChart(seriesA, seriesB, labels){
-  // seriesA/B: arrays of {x:index, y:value|null}, 0-5 scale
-  const W=520,H=210, padL=28, padR=54, padT=14, padB=28;
+function singleTrendChart(series, labels, color){
+  const W=480,H=180, padL=28, padR=50, padT=14, padB=28;
   const x = i => padL + i*((W-padL-padR)/(labels.length-1));
   const y = v => padT + (5-v)/5*(H-padT-padB);
-  function pathOf(series){
-    const pts = series.filter(p=>p.y!==null);
-    if(pts.length<1) return {d:'',pts};
-    let d = pts.map((p,idx)=>(idx===0?'M':'L')+x(p.x).toFixed(1)+' '+y(p.y).toFixed(1)).join(' ');
-    return {d, pts};
-  }
-  const a = pathOf(seriesA), b = pathOf(seriesB);
+  const pts = series.filter(p=>p.y!==null);
   let grid = '';
   for(let v=0; v<=5; v++){
     grid += `<line x1="${padL}" y1="${y(v)}" x2="${W-padR}" y2="${y(v)}" class="chart-grid"/>`;
     grid += `<text x="${padL-8}" y="${y(v)+4}" text-anchor="end" class="chart-axis">${v}</text>`;
   }
-  let xlabels='';
-  labels.forEach((l,i)=>{ xlabels += `<text x="${x(i)}" y="${H-8}" text-anchor="middle" class="chart-axis">${esc(l)}</text>`; });
-
-  function markers(series, klass){
-    return series.filter(p=>p.y!==null).map(p=>`<circle cx="${x(p.x)}" cy="${y(p.y)}" r="4" class="${klass}-dot"/>`).join('');
+  let xlbls='';
+  labels.forEach((l,i)=>{ xlbls += `<text x="${x(i)}" y="${H-8}" text-anchor="middle" class="chart-axis">${esc(l)}</text>`; });
+  const d = pts.length ? pts.map((p,idx)=>(idx===0?'M':'L')+x(p.x).toFixed(1)+' '+y(p.y).toFixed(1)).join(' ') : '';
+  const dots = pts.map(p=>`<circle cx="${x(p.x)}" cy="${y(p.y)}" r="4.5" fill="${color}" stroke="var(--surface)" stroke-width="2"/>`).join('');
+  let endLbl = '';
+  if(pts.length){
+    const last = pts[pts.length-1];
+    endLbl = `<text x="${x(last.x)+10}" y="${y(last.y)+4}" class="chart-endlabel">${last.y.toFixed(1)}</text>`;
   }
-  function endLabels(seriesA, seriesB){
-    const ptsA = seriesA.filter(p=>p.y!==null);
-    const ptsB = seriesB.filter(p=>p.y!==null);
-    let out = '';
-    const lastA = ptsA.length ? ptsA[ptsA.length-1] : null;
-    const lastB = ptsB.length ? ptsB[ptsB.length-1] : null;
-    let yA = lastA ? y(lastA.y) : null;
-    let yB = lastB ? y(lastB.y) : null;
-    // If both exist and too close, spread apart; higher score (smaller y) goes on top
-    if(yA!==null && yB!==null && Math.abs(yA - yB) < 16){
-      const mid = (yA + yB) / 2;
-      if(lastA.y >= lastB.y){ // A has higher or equal score → A label goes up (smaller y)
-        yA = mid - 9;
-        yB = mid + 9;
-      } else {
-        yA = mid + 9;
-        yB = mid - 9;
-      }
-    }
-    if(lastA){
-      out += `<circle cx="${x(lastA.x)}" cy="${y(lastA.y)}" r="4.5" class="skill-dot"/>
-        <text x="${x(lastA.x)+9}" y="${yA+4}" class="chart-endlabel">${lastA.y.toFixed(1)}</text>`;
-    }
-    if(lastB){
-      out += `<circle cx="${x(lastB.x)}" cy="${y(lastB.y)}" r="4.5" class="drive-dot"/>
-        <text x="${x(lastB.x)+9}" y="${yB+4}" class="chart-endlabel">${lastB.y.toFixed(1)}</text>`;
-    }
-    return out;
-  }
-
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block">
     <style>
       .chart-grid{stroke:var(--border);stroke-width:1;}
       .chart-axis{font-family:var(--font-mono);font-size:10px;fill:var(--ink-mute);}
-      .skill-line{stroke:var(--accent-skill);stroke-width:2;fill:none;stroke-linecap:round;}
-      .drive-line{stroke:var(--accent-drive);stroke-width:2;fill:none;stroke-linecap:round;}
-      .skill-dot{fill:var(--accent-skill);stroke:var(--surface);stroke-width:2;}
-      .drive-dot{fill:var(--accent-drive);stroke:var(--surface);stroke-width:2;}
       .chart-endlabel{font-family:var(--font-mono);font-size:11px;fill:var(--ink-soft);}
     </style>
-    ${grid}${xlabels}
-    ${a.d?`<path d="${a.d}" class="skill-line"/>`:''}${markers(a.pts,'skill')}
-    ${b.d?`<path d="${b.d}" class="drive-line"/>`:''}${markers(b.pts,'drive')}
-    ${endLabels(a.pts, b.pts)}
+    ${grid}${xlbls}
+    ${d?`<path d="${d}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>`:''}
+    ${dots}${endLbl}
   </svg>`;
 }
 
@@ -2636,14 +2597,10 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
   const skillSeries = ROUNDS.map((r,i)=>({x:i, y: hasSubmission(menteeId,r.key) ? avg(getResponse(menteeId,r.key).skill) : null}));
   const driveSeries = ROUNDS.map((r,i)=>({x:i, y: hasSubmission(menteeId,r.key) ? avg(getResponse(menteeId,r.key).drive) : null}));
   let out = head;
-  out += `<div class="card"><div class="card-head"><div><div class="tag">Trend</div><h3>Skill &amp; Drive Average (0–5)</h3></div></div>
-    <div class="card-body">
-    ${trendChart(skillSeries, driveSeries, ROUNDS.map(r=>r.short))}
-    <div class="legend-row">
-      <span class="legend-swatch"><i style="background:var(--accent-skill)"></i>Skill self-assessment (35 items)</span>
-      <span class="legend-swatch"><i style="background:var(--accent-drive)"></i>Drive / motivation (15 items)</span>
-    </div>
-    </div></div>`;
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Trend</div><h3>Skill Self-Assessment (35 items)</h3></div></div>
+    <div class="card-body">${singleTrendChart(skillSeries, ROUNDS.map(r=>r.short), 'var(--accent-skill)')}</div></div>`;
+  out += `<div class="card"><div class="card-head"><div><div class="tag">Trend</div><h3>Drive / Motivation (15 items)</h3></div></div>
+    <div class="card-body">${singleTrendChart(driveSeries, ROUNDS.map(r=>r.short), 'var(--accent-drive)')}</div></div>`;
 
   const round = activeRound && hasSubmission(menteeId, activeRound) ? activeRound : latestSubmittedRound(menteeId);
   const resp = getResponse(menteeId, round);

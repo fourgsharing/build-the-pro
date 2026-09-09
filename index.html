@@ -1165,11 +1165,11 @@ function buildSummaryHtml(resp, overrideMenteeId, overrideRound){
   h += `<div class="field-label">Priorities</div><ul class="summary-list">${(refl.priorities90||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
   h += `<div class="field-label">Primary Priority</div><p class="summary-answer">${esc(refl.primaryPriority90||'—')}</p>`;
   h += `<div class="field-label">Why?</div><p class="summary-answer">${esc(refl.priorityWhy||'—')}</p>`;
-  h += `<div class="field-label">What Would Success Look Like?</div>`;
+  h += `<div class="field-label">What Would Success Look Like After 90 Hari Build The Pro?</div>`;
   h += `<div class="summary-answer"><table class="success-table">
-    <tr><td>Tambahan jalur aktif</td><td><strong>${esc(refl.successJalur||'—')}</strong></td></tr>
-    <tr><td>Tambahan orang aktif</td><td><strong>${esc(refl.successOrangAktif||'—')}</strong></td></tr>
-    <tr><td>Tambahan trainer</td><td><strong>${esc(refl.successTrainer||'—')}</strong></td></tr>
+    <tr><td>Tambahan Jalur Aktif</td><td><strong>${esc(refl.successJalur||'—')}</strong></td></tr>
+    <tr><td>Tambahan Orang Aktif</td><td><strong>${esc(refl.successOrangAktif||'—')}</strong></td></tr>
+    <tr><td>Tambahan Trainer</td><td><strong>${esc(refl.successTrainer||'—')}</strong></td></tr>
     <tr><td>Omzet</td><td><strong>${esc(fmtNum(refl.successOmzet)||refl.successOmzet||'—')}</strong></td></tr>
     <tr><td>Peringkat</td><td><strong>${esc(refl.successPeringkat||'—')}</strong></td></tr>
   </table></div>`;
@@ -1615,17 +1615,16 @@ function renderMenteeForm(){
     <div class="field-label">WHY? <span class="req">*</span></div>
     <textarea rows="2" data-refl-single="priorityWhy" placeholder="...">${esc(refl.priorityWhy||'')}</textarea>
 
-    <div class="field-label">WHAT WOULD SUCCESS LOOK LIKE? <span class="req">*</span></div>
-    <p style="font-size:12.5px;color:var(--ink-mute);margin-bottom:8px;">Pada akhir program Build The Pro</p>
-    <label style="font-size:13px;display:block;margin-bottom:4px;">Berapa tambahan jalur aktif?</label>
+    <div class="field-label">WHAT WOULD SUCCESS LOOK LIKE AFTER 90 HARI BUILD THE PRO? <span class="req">*</span></div>
+    <label style="font-size:13px;display:block;margin-bottom:4px;">Tambahan Jalur Aktif:</label>
     <input type="text" data-refl-single="successJalur" value="${esc(refl.successJalur||'')}" placeholder="...">
-    <label style="font-size:13px;display:block;margin:10px 0 4px;">Berapa tambahan orang aktif?</label>
+    <label style="font-size:13px;display:block;margin:10px 0 4px;">Tambahan Orang Aktif:</label>
     <input type="text" data-refl-single="successOrangAktif" value="${esc(refl.successOrangAktif||'')}" placeholder="...">
-    <label style="font-size:13px;display:block;margin:10px 0 4px;">Berapa tambahan trainer?</label>
+    <label style="font-size:13px;display:block;margin:10px 0 4px;">Tambahan Trainer:</label>
     <input type="text" data-refl-single="successTrainer" value="${esc(refl.successTrainer||'')}" placeholder="...">
-    <label style="font-size:13px;display:block;margin:10px 0 4px;">Omzet?</label>
+    <label style="font-size:13px;display:block;margin:10px 0 4px;">Omzet:</label>
     <input type="text" data-refl-single="successOmzet" value="${esc(fmtNum(refl.successOmzet)||'')}" placeholder="..." onblur="this.value=fmtNum(this.value)||this.value">
-    <label style="font-size:13px;display:block;margin:10px 0 4px;">Peringkat?</label>
+    <label style="font-size:13px;display:block;margin:10px 0 4px;">Peringkat:</label>
     <input type="text" data-refl-single="successPeringkat" value="${esc(refl.successPeringkat||'')}" placeholder="...">
   </div></div>`;
   html += buildFormNav(6, 9);
@@ -2676,8 +2675,13 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     <div class="refl-block"><h4>Priorities</h4>${(Array.isArray(refl.priorities90)&&refl.priorities90.length)?`<ul>${refl.priorities90.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:'<p class="empty-line">Not filled in.</p>'}</div>
     <div class="refl-block"><h4>Primary Priority</h4>${nb(refl.primaryPriority90)}</div>
     <div class="refl-block"><h4>Why?</h4>${nb(refl.priorityWhy)}</div>
-    <div class="refl-block"><h4>What Would Success Look Like?</h4>
-      ${(refl.successJalur||refl.successOrangAktif||refl.successTrainer||refl.successOmzet||refl.successPeringkat)?`<p>Jalur aktif: <b>${esc(refl.successJalur||'—')}</b> · Orang aktif: <b>${esc(refl.successOrangAktif||'—')}</b> · Trainer: <b>${esc(refl.successTrainer||'—')}</b> · Omzet: <b>${esc(fmtNum(refl.successOmzet)||refl.successOmzet||'—')}</b> · Peringkat: <b>${esc(refl.successPeringkat||'—')}</b></p>`:'<p class="empty-line">Not filled in.</p>'}
+    <div class="refl-block"><h4>What Would Success Look Like After 90 Hari Build The Pro?</h4>
+      ${(refl.successJalur||refl.successOrangAktif||refl.successTrainer||refl.successOmzet||refl.successPeringkat)?`
+      <p>Tambahan Jalur Aktif: <b>${esc(refl.successJalur||'—')}</b></p>
+      <p>Tambahan Orang Aktif: <b>${esc(refl.successOrangAktif||'—')}</b></p>
+      <p>Tambahan Trainer: <b>${esc(refl.successTrainer||'—')}</b></p>
+      <p>Omzet: <b>${esc(fmtNum(refl.successOmzet)||refl.successOmzet||'—')}</b></p>
+      <p>Peringkat: <b>${esc(refl.successPeringkat||'—')}</b></p>`:'<p class="empty-line">Not filled in.</p>'}
     </div>
     </div></div>`;
 

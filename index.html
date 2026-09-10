@@ -3130,6 +3130,7 @@ function renderLeader(){
       });
       saveResponseToFirestore(mid, rnd).then(()=>{
         toast('Changes saved successfully.');
+        renderLeader();
       });
     });
   }

@@ -2719,6 +2719,12 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     }).join('') : '<p class="empty-line">Not filled in.</p>'}
     </div></div>`;
 
+  if(currentUserRole==='leadership'){
+    out += `<div style="text-align:right;margin-bottom:18px;">
+      <button class="btn btn-primary" id="leader-save-edits" data-mentee="${menteeId}" data-round="${round}" style="padding:8px 24px;">💾 Save Changes</button>
+    </div>`;
+  }
+
   // Dream
   out += `<div class="card"><div class="card-head"><div><div class="tag">Reflection · ${roundLabel}</div><h3>Dream</h3></div></div>
     <div class="card-body">
@@ -3076,38 +3082,36 @@ function renderLeader(){
   }
   wireDetailRoundPills(detail, leaderState.menteeId, (round)=>{ leaderState.round = round; renderLeader(); });
 
-  // Wire leadership editable fields
-  detail.querySelectorAll('[data-leader-edit]').forEach(inp=>{
-    inp.addEventListener('change', ()=>{
-      const field = inp.dataset.leaderEdit;
-      const mid = inp.dataset.mentee;
-      const rnd = inp.dataset.round;
+  // Wire leadership save button
+  const saveBtn = detail.querySelector('#leader-save-edits');
+  if(saveBtn){
+    saveBtn.addEventListener('click', ()=>{
+      const mid = saveBtn.dataset.mentee;
+      const rnd = saveBtn.dataset.round;
       const resp = getResponse(mid, rnd);
-      let val = inp.value.trim();
-      if(field==='successOmzet') val = val.replace(/\./g,'');
-      resp.reflections[field] = val;
-      saveResponseToFirestore(mid, rnd);
-      toast('Saved');
+      // Collect success metrics
+      detail.querySelectorAll('[data-leader-edit]').forEach(inp=>{
+        let val = inp.value.trim();
+        if(inp.dataset.leaderEdit==='successOmzet') val = val.replace(/\./g,'');
+        resp.reflections[inp.dataset.leaderEdit] = val;
+      });
+      // Collect develop people edits
+      detail.querySelectorAll('[data-leader-devp]').forEach(inp=>{
+        const pidx = parseInt(inp.dataset.pidx);
+        const person = resp.reflections.developPeople[pidx];
+        if(inp.dataset.leaderDevp==='gap'){
+          person.gap = inp.value.trim();
+        } else if(inp.dataset.leaderDevp==='target'){
+          const tidx = parseInt(inp.dataset.tidx);
+          if(!person.targets) person.targets = ['','',''];
+          person.targets[tidx] = inp.value.trim();
+        }
+      });
+      saveResponseToFirestore(mid, rnd).then(()=>{
+        toast('Changes saved successfully.');
+      });
     });
-  });
-  detail.querySelectorAll('[data-leader-devp]').forEach(inp=>{
-    inp.addEventListener('change', ()=>{
-      const mid = inp.dataset.mentee;
-      const rnd = inp.dataset.round;
-      const pidx = parseInt(inp.dataset.pidx);
-      const resp = getResponse(mid, rnd);
-      const person = resp.reflections.developPeople[pidx];
-      if(inp.dataset.leaderDevp==='gap'){
-        person.gap = inp.value.trim();
-      } else if(inp.dataset.leaderDevp==='target'){
-        const tidx = parseInt(inp.dataset.tidx);
-        if(!person.targets) person.targets = ['','',''];
-        person.targets[tidx] = inp.value.trim();
-      }
-      saveResponseToFirestore(mid, rnd);
-      toast('Saved');
-    });
-  });
+  }
 }
 
 /* ============================================================

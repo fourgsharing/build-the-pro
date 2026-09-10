@@ -2676,7 +2676,13 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     <div class="refl-block"><h4>Primary Priority</h4>${nb(refl.primaryPriority90)}</div>
     <div class="refl-block"><h4>Why?</h4>${nb(refl.priorityWhy)}</div>
     <div class="refl-block"><h4>What Would Success Look Like After 90 Hari Build The Pro?</h4>
-      ${(refl.successJalur||refl.successOrangAktif||refl.successTrainer||refl.successOmzet||refl.successPeringkat)?`
+      ${currentUserRole==='leadership'?`
+      <p>Tambahan Jalur Aktif: <input type="text" data-leader-edit="successJalur" data-mentee="${menteeId}" data-round="${round}" value="${esc(refl.successJalur||'')}" style="width:120px;display:inline;"></p>
+      <p>Tambahan Orang Aktif: <input type="text" data-leader-edit="successOrangAktif" data-mentee="${menteeId}" data-round="${round}" value="${esc(refl.successOrangAktif||'')}" style="width:120px;display:inline;"></p>
+      <p>Tambahan Trainer: <input type="text" data-leader-edit="successTrainer" data-mentee="${menteeId}" data-round="${round}" value="${esc(refl.successTrainer||'')}" style="width:120px;display:inline;"></p>
+      <p>Omzet: <input type="text" data-leader-edit="successOmzet" data-mentee="${menteeId}" data-round="${round}" value="${esc(fmtNum(refl.successOmzet)||refl.successOmzet||'')}" style="width:160px;display:inline;" onblur="this.value=fmtNum(this.value)||this.value"></p>
+      <p>Peringkat: <input type="text" data-leader-edit="successPeringkat" data-mentee="${menteeId}" data-round="${round}" value="${esc(refl.successPeringkat||'')}" style="width:120px;display:inline;"></p>
+      `:(refl.successJalur||refl.successOrangAktif||refl.successTrainer||refl.successOmzet||refl.successPeringkat)?`
       <p>Tambahan Jalur Aktif: <b>${esc(refl.successJalur||'—')}</b></p>
       <p>Tambahan Orang Aktif: <b>${esc(refl.successOrangAktif||'—')}</b></p>
       <p>Tambahan Trainer: <b>${esc(refl.successTrainer||'—')}</b></p>
@@ -2692,6 +2698,17 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     ${peopleFilled.length ? peopleFilled.map((p,i)=>{
       const conds = [...(Array.isArray(p.conditions)?p.conditions:[]), p.conditionOther?'Lain-lain: '+p.conditionOther:''].filter(Boolean);
       const targets = (p.targets||[]).filter(Boolean);
+      const pidx = refl.developPeople.indexOf(p);
+      if(currentUserRole==='leadership'){
+        return `<div class="refl-block">
+          <h4>Person ${i+1}: ${esc(p.name)}</h4>
+          <p><b>Category:</b> ${esc(p.category||'—')}</p>
+          ${conds.length?`<p><b>Current condition:</b> ${conds.map(esc).join(', ')}</p>`:''}
+          <p><b>Biggest gap:</b> <input type="text" data-leader-devp="gap" data-pidx="${pidx}" data-mentee="${menteeId}" data-round="${round}" value="${esc(p.gap||'')}" style="width:80%;display:inline;"></p>
+          <p><b>Targets:</b></p>
+          <ol>${[0,1,2].map(ti=>`<li><input type="text" data-leader-devp="target" data-pidx="${pidx}" data-tidx="${ti}" data-mentee="${menteeId}" data-round="${round}" value="${esc((p.targets||[])[ti]||'')}" style="width:80%;display:inline;"></li>`).join('')}</ol>
+        </div>`;
+      }
       return `<div class="refl-block">
         <h4>Person ${i+1}: ${esc(p.name)}</h4>
         <p><b>Category:</b> ${esc(p.category||'—')}</p>
@@ -3058,6 +3075,39 @@ function renderLeader(){
     console.error('renderMenteeDetail error:', e);
   }
   wireDetailRoundPills(detail, leaderState.menteeId, (round)=>{ leaderState.round = round; renderLeader(); });
+
+  // Wire leadership editable fields
+  detail.querySelectorAll('[data-leader-edit]').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      const field = inp.dataset.leaderEdit;
+      const mid = inp.dataset.mentee;
+      const rnd = inp.dataset.round;
+      const resp = getResponse(mid, rnd);
+      let val = inp.value.trim();
+      if(field==='successOmzet') val = val.replace(/\./g,'');
+      resp.reflections[field] = val;
+      saveResponseToFirestore(mid, rnd);
+      toast('Saved');
+    });
+  });
+  detail.querySelectorAll('[data-leader-devp]').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      const mid = inp.dataset.mentee;
+      const rnd = inp.dataset.round;
+      const pidx = parseInt(inp.dataset.pidx);
+      const resp = getResponse(mid, rnd);
+      const person = resp.reflections.developPeople[pidx];
+      if(inp.dataset.leaderDevp==='gap'){
+        person.gap = inp.value.trim();
+      } else if(inp.dataset.leaderDevp==='target'){
+        const tidx = parseInt(inp.dataset.tidx);
+        if(!person.targets) person.targets = ['','',''];
+        person.targets[tidx] = inp.value.trim();
+      }
+      saveResponseToFirestore(mid, rnd);
+      toast('Saved');
+    });
+  });
 }
 
 /* ============================================================

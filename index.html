@@ -2723,6 +2723,11 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
         ${targets.length?`<p><b>Targets:</b></p><ol>${targets.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>`:''}
       </div>`;
     }).join('') : '<p class="empty-line">Not filled in.</p>'}
+    ${currentUserRole==='leadership'?`
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+      <input type="text" id="leader-add-person-name" placeholder="New person's name" style="flex:1;">
+      <button class="btn btn-primary btn-sm" id="leader-add-person-btn" data-mentee="${menteeId}" data-round="${round}">+ Add Person</button>
+    </div>`:''}
     </div></div>`;
 
   if(currentUserRole==='leadership'){
@@ -3130,6 +3135,25 @@ function renderLeader(){
       });
       saveResponseToFirestore(mid, rnd).then(()=>{
         toast('Changes saved successfully.');
+        renderLeader();
+      });
+    });
+  }
+
+  // Wire add person button
+  const addPersonBtn = detail.querySelector('#leader-add-person-btn');
+  if(addPersonBtn){
+    addPersonBtn.addEventListener('click', ()=>{
+      const nameInput = detail.querySelector('#leader-add-person-name');
+      const name = nameInput.value.trim();
+      if(!name){ toast('Enter a name first.'); return; }
+      const mid = addPersonBtn.dataset.mentee;
+      const rnd = addPersonBtn.dataset.round;
+      const resp = getResponse(mid, rnd);
+      resp.reflections.developPeople.push(blankDevelopPerson());
+      resp.reflections.developPeople[resp.reflections.developPeople.length-1].name = name;
+      saveResponseToFirestore(mid, rnd).then(()=>{
+        toast(`Added ${name}.`);
         renderLeader();
       });
     });

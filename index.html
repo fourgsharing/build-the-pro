@@ -2723,7 +2723,7 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
         ${targets.length?`<p><b>Targets:</b></p><ol>${targets.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>`:''}
       </div>`;
     }).join('') : '<p class="empty-line">Not filled in.</p>'}
-    ${currentUserRole==='leadership'?`
+    ${currentUserRole==='leadership' && peopleFilled.length<3?`
     <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
       <input type="text" id="leader-add-person-name" placeholder="New person's name" style="flex:1;">
       <button class="btn btn-primary btn-sm" id="leader-add-person-btn" data-mentee="${menteeId}" data-round="${round}">+ Add Person</button>
@@ -3150,6 +3150,8 @@ function renderLeader(){
       const mid = addPersonBtn.dataset.mentee;
       const rnd = addPersonBtn.dataset.round;
       const resp = getResponse(mid, rnd);
+      const filled = resp.reflections.developPeople.filter(p=>p.name).length;
+      if(filled>=3){ toast('Maximum 3 people.'); return; }
       resp.reflections.developPeople.push(blankDevelopPerson());
       resp.reflections.developPeople[resp.reflections.developPeople.length-1].name = name;
       saveResponseToFirestore(mid, rnd).then(()=>{

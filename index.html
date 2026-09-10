@@ -2702,8 +2702,14 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
       if(currentUserRole==='leadership'){
         return `<div class="refl-block">
           <h4>Person ${i+1}: ${esc(p.name)}</h4>
-          <p><b>Category:</b> ${esc(p.category||'—')}</p>
-          ${conds.length?`<p><b>Current condition:</b> ${conds.map(esc).join(', ')}</p>`:''}
+          <p><b>Category:</b> <select data-leader-devp="category" data-pidx="${pidx}" data-mentee="${menteeId}" data-round="${round}" style="display:inline;width:auto;">
+            <option value="">—</option>
+            ${DEVELOP_CATEGORIES.map(c=>`<option value="${esc(c)}" ${p.category===c?'selected':''}>${esc(c)}</option>`).join('')}
+          </select></p>
+          <p><b>Current condition:</b></p>
+          <div style="margin:4px 0 8px;font-size:13px;">
+            ${CONDITION_OPTIONS.map((c,j)=>`<label style="display:block;margin:2px 0;"><input type="checkbox" data-leader-cond data-pidx="${pidx}" data-cidx="${j}" data-mentee="${menteeId}" data-round="${round}" ${(Array.isArray(p.conditions)&&p.conditions.includes(c))?'checked':''}> ${esc(c)}</label>`).join('')}
+          </div>
           <p><b>Biggest gap:</b> <input type="text" data-leader-devp="gap" data-pidx="${pidx}" data-mentee="${menteeId}" data-round="${round}" value="${esc(p.gap||'')}" style="width:80%;display:inline;"></p>
           <p><b>Targets:</b></p>
           <ol>${[0,1,2].map(ti=>`<li><input type="text" data-leader-devp="target" data-pidx="${pidx}" data-tidx="${ti}" data-mentee="${menteeId}" data-round="${round}" value="${esc((p.targets||[])[ti]||'')}" style="width:80%;display:inline;"></li>`).join('')}</ol>
@@ -3099,12 +3105,27 @@ function renderLeader(){
       detail.querySelectorAll('[data-leader-devp]').forEach(inp=>{
         const pidx = parseInt(inp.dataset.pidx);
         const person = resp.reflections.developPeople[pidx];
-        if(inp.dataset.leaderDevp==='gap'){
+        if(inp.dataset.leaderDevp==='category'){
+          person.category = inp.value;
+        } else if(inp.dataset.leaderDevp==='gap'){
           person.gap = inp.value.trim();
         } else if(inp.dataset.leaderDevp==='target'){
           const tidx = parseInt(inp.dataset.tidx);
           if(!person.targets) person.targets = ['','',''];
           person.targets[tidx] = inp.value.trim();
+        }
+      });
+      // Collect condition checkboxes
+      detail.querySelectorAll('[data-leader-cond]').forEach(cb=>{
+        const pidx = parseInt(cb.dataset.pidx);
+        const cidx = parseInt(cb.dataset.cidx);
+        const person = resp.reflections.developPeople[pidx];
+        if(!Array.isArray(person.conditions)) person.conditions = [];
+        const label = CONDITION_OPTIONS[cidx];
+        if(cb.checked && !person.conditions.includes(label)){
+          person.conditions.push(label);
+        } else if(!cb.checked){
+          person.conditions = person.conditions.filter(c=>c!==label);
         }
       });
       saveResponseToFirestore(mid, rnd).then(()=>{

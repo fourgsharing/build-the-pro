@@ -858,7 +858,7 @@ const REVIEW60_FOCUS_OPTIONS = [
 function blankReview60(){
   return {
     progress:'', biggestGrowth:'', leadershipGap:'', vipDevelopment:'', nextFocus:'',
-    vipName:'', vipIsNew:false, vipChangeReason:'', vipGapToPrioritize:'',
+    vipName:'', vipGapToPrioritize:'',
     habitStop:'', habitStart:'', weeklySteps:['','','',''], successIndicator:''
   };
 }
@@ -2190,11 +2190,6 @@ function renderReview60Form(){
   const mentee = MENTEES.find(m=>m.id===menteeId);
   const locked = !!resp.submittedAt;
 
-  const beforePeople = hasSubmission(menteeId,'before')
-    ? getResponse(menteeId,'before').reflections.developPeople.filter(p=>p.name)
-    : [];
-  const isCustomVip = refl.vipName && !beforePeople.some(p=>p.name===refl.vipName);
-
   document.getElementById('mentee-already-note').innerHTML = locked
     ? `<p class="hint locked-note">🔒 Submitted on ${new Date(resp.submittedAt).toLocaleDateString()} and locked — you can see your answers below, but not change them.</p>`
     : `<p class="hint">Filling out as <b>${esc(mentee.name)}</b> — ${esc(REVIEW60_ROUND.label)}.</p>`;
@@ -2227,16 +2222,7 @@ function renderReview60Form(){
     <p class="hint">Bagian ini wajib diisi secara spesifik berdasarkan Growth Tracker awal dan hasil review 60 hari. <span class="req">*</span> wajib diisi.</p>
 
     <div class="field-label">6. Dari VIP/downline yang saya pilih di Beginning, siapa SATU orang yang akan menjadi fokus pengembangan saya selama 30 hari terakhir? <span class="req">*</span></div>
-    <select id="review60-vip-select" style="width:100%;max-width:420px;">
-      <option value="">— Pilih —</option>
-      ${beforePeople.map(p=>`<option value="${esc(p.name)}" ${refl.vipName===p.name?'selected':''}>${esc(p.name)}</option>`).join('')}
-      <option value="__other__" ${isCustomVip?'selected':''}>Orang lain...</option>
-    </select>
-    <div id="review60-vip-other-wrap" style="display:${isCustomVip?'block':'none'};margin-top:8px;">
-      <input type="text" id="review60-vip-other" placeholder="Nama VIP/downline" value="${esc(isCustomVip?refl.vipName:'')}" style="width:100%;max-width:420px;box-sizing:border-box;margin-bottom:8px;">
-      <p class="hint" style="margin-bottom:4px;">Alasan mengubah pilihan dari daftar Beginning: <span class="req">*</span></p>
-      <textarea id="review60-vip-reason" rows="2" maxlength="500" placeholder="...">${esc(refl.vipChangeReason||'')}</textarea>
-    </div>
+    <input type="text" id="review60-vip-name" data-r60-field="vipName" value="${esc(refl.vipName||'')}" placeholder="Nama VIP/downline" style="width:100%;max-width:420px;box-sizing:border-box;">
 
     <div class="field-label">7. Melihat kondisi VIP/downline tersebut di MID, apa SATU kemampuan yang belum berkembang sesuai target awal dan perlu menjadi prioritas? <span class="req">*</span></div>
     <textarea data-r60-field="vipGapToPrioritize" rows="3" maxlength="500" data-maxlen="500" placeholder="Maks. 500 karakter">${esc(refl.vipGapToPrioritize||'')}</textarea>
@@ -2299,28 +2285,6 @@ function wireReview60Form(resp, refl, locked){
     });
   });
 
-  const vipSelect = document.getElementById('review60-vip-select');
-  const otherWrap = document.getElementById('review60-vip-other-wrap');
-  const otherInput = document.getElementById('review60-vip-other');
-  const reasonInput = document.getElementById('review60-vip-reason');
-  if(vipSelect){
-    vipSelect.addEventListener('change', ()=>{
-      if(vipSelect.value==='__other__'){
-        otherWrap.style.display = 'block';
-        refl.vipIsNew = true;
-        refl.vipName = otherInput.value;
-      } else {
-        otherWrap.style.display = 'none';
-        refl.vipIsNew = false;
-        refl.vipName = vipSelect.value;
-        refl.vipChangeReason = '';
-      }
-      saveDB();
-    });
-  }
-  if(otherInput) otherInput.addEventListener('input', ()=>{ refl.vipName = otherInput.value; saveDB(); });
-  if(reasonInput) reasonInput.addEventListener('input', ()=>{ refl.vipChangeReason = reasonInput.value; saveDB(); });
-
   if(locked) return;
 
   const clearBtn = document.getElementById('review60-clear-btn');
@@ -2348,8 +2312,7 @@ function wireReview60Form(resp, refl, locked){
     if(!refl.leadershipGap) missing.push('My Leadership Gap');
     if(!refl.vipDevelopment) missing.push('My VIP Development');
     if(!refl.nextFocus) missing.push('My Next 30-Day Focus');
-    if(!refl.vipName) missing.push('VIP/downline untuk 30 hari ke depan');
-    if(refl.vipIsNew && !refl.vipChangeReason.trim()) missing.push('Alasan mengubah pilihan VIP');
+    if(!refl.vipName.trim()) missing.push('VIP/downline untuk 30 hari ke depan');
     if(!refl.vipGapToPrioritize.trim()) missing.push('Pertanyaan 7');
     if(!refl.habitStop.trim() || !refl.habitStart.trim()) missing.push('Pertanyaan 8');
     if(refl.weeklySteps.some(s=>!s.trim())) missing.push('Pertanyaan 9 (Minggu 1-4)');
@@ -3463,7 +3426,7 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
       <div class="refl-block"><h4>My Leadership Gap</h4>${nb(lbl(REVIEW60_GAP_OPTIONS,r60.leadershipGap))}</div>
       <div class="refl-block"><h4>My VIP Development</h4>${nb(lbl(REVIEW60_VIPDEV_OPTIONS,r60.vipDevelopment))}</div>
       <div class="refl-block"><h4>My Next 30-Day Focus</h4>${nb(lbl(REVIEW60_FOCUS_OPTIONS,r60.nextFocus))}</div>
-      <div class="refl-block"><h4>Fokus VIP/Downline (30 Hari)</h4><p>${esc(r60.vipName||'—')}</p>${r60.vipIsNew?`<p style="color:var(--ink-mute);font-size:12.5px;">Alasan berbeda dari Beginning: ${esc(r60.vipChangeReason||'—')}</p>`:''}</div>
+      <div class="refl-block"><h4>Fokus VIP/Downline (30 Hari)</h4><p>${esc(r60.vipName||'—')}</p></div>
       <div class="refl-block"><h4>Kemampuan yang Diprioritaskan</h4>${nb(r60.vipGapToPrioritize)}</div>
       <div class="refl-block"><h4>Habit — Stop/Ubah</h4>${nb(r60.habitStop)}</div>
       <div class="refl-block"><h4>Habit — Tambah</h4>${nb(r60.habitStart)}</div>

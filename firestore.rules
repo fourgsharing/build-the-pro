@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check leadership role
+    function isLeadership() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'leadership';
+    }
+
+    // Users — the user themselves or leadership can read.
+    // Leadership can also create user docs (needed when adding a mentor auto-creates their login).
+    match /users/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isLeadership());
+      allow create: if request.auth != null && (request.auth.uid == uid || isLeadership());
+      allow update: if isLeadership();
+    }
+
+    // Mentors — readable by anyone (mentee magic links show their mentor's name); leadership manages
+    match /mentors/{mentorId} {
+      allow read: if true;
+      allow create, update, delete: if isLeadership();
+    }
+
+    // Mentees — read by anyone (magic links); signed-in users manage
+    match /mentees/{menteeId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null;
+    }
+
+    // Responses — mentees submit via magic link without signing in
+    match /responses/{responseId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if request.auth != null;
+    }
+
+    // Invites — leadership creates, anyone can read/mark used during signup
+    match /invites/{code} {
+      allow read: if true;
+      allow create: if isLeadership();
+      allow update: if true;
+    }
+  }
+}

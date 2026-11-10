@@ -2,43 +2,44 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users collection — only the user themselves or leadership can read/write
+    // Helper function to check leadership role
+    function isLeadership() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'leadership';
+    }
+
+    // Users — the user themselves or leadership can read.
+    // Leadership can also create user docs (needed when adding a mentor auto-creates their login).
     match /users/{uid} {
       allow read: if request.auth != null && (request.auth.uid == uid || isLeadership());
-      allow create: if request.auth != null && request.auth.uid == uid;
-      allow update: if request.auth != null && isLeadership();
+      allow create: if request.auth != null && (request.auth.uid == uid || isLeadership());
+      allow update: if isLeadership();
     }
 
-    // Mentors — leadership can manage, mentors can read their own
+    // Mentors — readable by anyone (mentee magic links show their mentor's name); leadership manages
     match /mentors/{mentorId} {
-      allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null && isLeadership();
+      allow read: if true;
+      allow create, update, delete: if isLeadership();
     }
 
-    // Mentees — leadership can manage, mentors can manage their own mentees
+    // Mentees — read by anyone (magic links); signed-in users manage
     match /mentees/{menteeId} {
-      allow read: if true; // mentees access via magic links (no auth)
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      allow read: if true;
+      allow create, update, delete: if request.auth != null;
     }
 
-    // Responses — mentees can write (no auth via magic link), authenticated users can read
+    // Responses — mentees submit via magic link without signing in
     match /responses/{responseId} {
       allow read: if true;
-      allow create, update: if true; // mentees submit without auth
+      allow create, update: if true;
       allow delete: if request.auth != null;
     }
 
-    // Invites — leadership creates, anyone can read (to validate during signup)
+    // Invites — leadership creates, anyone can read/mark used during signup
     match /invites/{code} {
       allow read: if true;
-      allow create: if request.auth != null && isLeadership();
-      allow update: if true; // marked used during signup
-    }
-
-    // Helper function to check leadership role
-    function isLeadership() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'leadership';
+      allow create: if isLeadership();
+      allow update: if true;
     }
   }
 }

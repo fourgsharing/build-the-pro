@@ -385,6 +385,8 @@
   .detail-header .meta{ font-size:12.5px; color:var(--ink-mute); }
   .round-pills{ display:flex; gap:6px; }
   .round-pill{ border:1px solid var(--border); background:var(--surface); border-radius:999px; padding:6px 13px; font-size:12.5px; font-weight:600; color:var(--ink-mute); cursor:pointer; }
+  .round-pill.review60-jump{ border-color:var(--accent-drive); color:var(--accent-drive); margin-left:4px; }
+  .round-pill.review60-jump:hover{ background:color-mix(in oklab, var(--accent-drive) 10%, transparent); }
   .round-pill.active{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
   .round-pill.missing{ opacity:.45; cursor:default; }
 
@@ -3249,7 +3251,9 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     const has = hasSubmission(menteeId, r.key);
     const active = r.key===activeRound;
     return `<button class="round-pill ${active?'active':''} ${has?'':'missing'}" data-round="${r.key}" ${has?'':'disabled'}>${r.short}</button>`;
-  }).join('');
+  }).join('') + (hasSubmission(menteeId, REVIEW60_ROUND.key)
+    ? `<button class="round-pill review60-jump" type="button" onclick="document.getElementById('review60-detail-section').scrollIntoView({behavior:'smooth',block:'start'})">${esc(REVIEW60_ROUND.short)}</button>`
+    : '');
 
   let head = `<div class="detail-header">
     <div><h2>${esc(mentee.name)}</h2><div class="meta">${showMentorName?('Mentor: '+esc(mentor.name)+' · '):''}90-day Build The Pro tracker</div></div>
@@ -3259,14 +3263,21 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     </div>
   </div>`;
 
-  if(!anySubmitted){
+  const hasReview60 = hasSubmission(menteeId, REVIEW60_ROUND.key);
+  if(!anySubmitted && !hasReview60){
     return head + `<div class="detail-empty">No rounds submitted yet — this mentee's Before round is still pending.</div>`;
   }
+
+  let out = head;
+  const nb = (val) => val ? `<p>${esc(val)}</p>` : '<p class="empty-line">Not filled in.</p>';
+
+  if(!anySubmitted){
+    out += `<div class="detail-empty">The Before/Mid/After/Final rounds haven't been started yet — only the 60-Day Leadership Review below.</div>`;
+  } else {
 
   // Trend chart across all submitted rounds
   const skillSeries = ROUNDS.map((r,i)=>({x:i, y: hasSubmission(menteeId,r.key) ? avg(getResponse(menteeId,r.key).skill) : null}));
   const driveSeries = ROUNDS.map((r,i)=>({x:i, y: hasSubmission(menteeId,r.key) ? avg(getResponse(menteeId,r.key).drive) : null}));
-  let out = head;
   out += `<div class="card"><div class="card-head"><div><div class="tag">Trend</div><h3>Skill Self-Assessment (35 items)</h3></div></div>
     <div class="card-body">${singleTrendChart(skillSeries, ROUNDS.map(r=>r.short), 'var(--accent-skill)')}</div></div>`;
   out += `<div class="card"><div class="card-head"><div><div class="tag">Trend</div><h3>Drive / Motivation (15 items)</h3></div></div>
@@ -3278,7 +3289,6 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
   const refl = resp.reflections;
 
   const roundLabel = ROUNDS.find(r=>r.key===round).short;
-  const nb = (val) => val ? `<p>${esc(val)}</p>` : '<p class="empty-line">Not filled in.</p>';
 
   // Part 1: Skill Scores
   const skillLegend = `<div class="scale-legend">${SCALE_SKILL.map(s=>`<div class="sl-item"><span class="sl-num">${s.v}</span><span class="sl-txt">${esc(s.m)}</span></div>`).join('')}</div>`;
@@ -3419,10 +3429,13 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     <div class="refl-block"><h4>I will CONTINUE</h4>${nb(refl.commitContinue)}</div>
     </div></div>`;
 
+  } // end if(anySubmitted)
+
   // 60-Day Leadership Review — separate checkpoint, shown if submitted
-  if(hasSubmission(menteeId, REVIEW60_ROUND.key)){
+  if(hasReview60){
     const r60 = getResponse(menteeId, REVIEW60_ROUND.key).reflections.review60;
     const lbl = (opts,key) => (opts.find(o=>o.key===key)||{}).label || '—';
+    out += `<div id="review60-detail-section"></div>`;
     out += `<div class="card"><div class="card-head"><div><div class="tag">${esc(REVIEW60_ROUND.short)}</div><h3>The 30-Day Leadership Shift</h3></div></div>
       <div class="card-body">
       <div class="refl-block"><h4>My Progress</h4>${nb(lbl(REVIEW60_PROGRESS_OPTIONS,r60.progress))}</div>

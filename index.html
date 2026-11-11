@@ -500,12 +500,13 @@
      unreliable here — they can misbehave depending on scrollbar width and
      how the page is embedded — so the actual bleed amount on each side is
      measured and applied in JS (fitInfographicWidth, near the bottom of the
-     script) from the card's real on-screen position, which can never
-     overflow the real viewport because it's based on what's actually there
-     rather than assumed CSS units. This max-width is just the static
-     fallback before JS runs. */
+     script) from the card's real on-screen position: as wide as will fit
+     with a small breathing margin, and no hard cap, since that's derived
+     from what's actually there rather than an assumed number. No max-width
+     here on purpose — the JS-set inline width is the real source of truth;
+     a leftover max-width would just silently clip it back down. */
   .tl-wrap{
-    max-width:1300px; margin:0 auto; box-sizing:border-box;
+    margin:0 auto; box-sizing:border-box;
     background:#FAF7F0; border:1px solid #E5DFD0 !important; border-radius:var(--radius-card);
     padding:26px clamp(20px, 5vw, 56px);
   }
@@ -2202,19 +2203,20 @@ function downloadJourneyImage(menteeId){
   }
 }
 
-/* Widens the infographic card by exactly however much room actually exists
-   around it, measured from its real on-screen position — not assumed from
-   viewport units, which turned out unreliable (varies with scrollbar width,
-   iframe embedding, etc. and could force horizontal scrolling). This can
-   never overflow the real viewport because it's based on what's actually
-   there. Re-run on resize so it keeps fitting as the window changes size. */
+/* Widens the infographic card to fill as much of the screen as will fit —
+   no cap — measured from its real on-screen position, not assumed from
+   viewport units (which turned out unreliable: varies with scrollbar width,
+   iframe embedding, etc. and could force horizontal scrolling). Leaves a
+   small 12px breathing margin on each side; otherwise this can never
+   overflow the real viewport because it's based on what's actually there.
+   Re-run on resize so it keeps fitting as the window changes size. */
 function fitInfographicWidth(wrap){
   wrap.style.marginLeft = ''; wrap.style.marginRight = ''; wrap.style.width = '';
   const parent = wrap.parentElement;
   if(!parent) return;
   const rect = parent.getBoundingClientRect();
   const vw = document.documentElement.clientWidth;
-  const bleed = Math.max(0, Math.min(90, rect.left - 12, vw - rect.right - 12));
+  const bleed = Math.max(0, Math.min(rect.left - 12, vw - rect.right - 12));
   if(bleed > 4){
     wrap.style.marginLeft = `-${bleed}px`;
     wrap.style.marginRight = `-${bleed}px`;

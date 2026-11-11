@@ -327,6 +327,8 @@
   .round-dots{ display:flex; gap:4px; }
   .round-dot{ width:8px; height:8px; border-radius:50%; border:1.5px solid var(--ink-mute); }
   .round-dot.filled{ background:var(--status-good); border-color:var(--status-good); }
+  .round-dot-review{ width:8px; height:8px; border-radius:2px; border:1.5px solid var(--ink-mute); margin-left:2px; }
+  .round-dot-review.filled{ background:var(--accent-drive); border-color:var(--accent-drive); }
 
   .person-list{ margin-top:14px; border-top:1px solid var(--border); padding-top:12px; }
   .person-list-title{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-mute); margin-bottom:8px; }
@@ -3166,10 +3168,12 @@ function renderMentor(){
   list.forEach(m=>{
     const latest = latestSubmittedRound(m.id);
     const avgSkill = latest ? avg(getResponse(m.id, latest).skill) : null;
+    const hasReview60 = hasSubmission(m.id, REVIEW60_ROUND.key);
+    const subLabel = avgSkill!==null ? 'Skill avg '+fmt1(avgSkill)+'/5' : (hasReview60 ? REVIEW60_ROUND.short+' only' : 'No submissions yet');
     const b = el(`<button class="roster-item ${m.id===mentorState.menteeId?'active':''}">
       <span class="name">${esc(m.name)}</span>
-      <span class="sub">${avgSkill!==null ? 'Skill avg '+fmt1(avgSkill)+'/5' : 'No submissions yet'}</span>
-      <span class="round-dots">${ROUNDS.map(r=>`<span class="round-dot ${hasSubmission(m.id,r.key)?'filled':''}" title="${r.label}"></span>`).join('')}</span>
+      <span class="sub">${subLabel}</span>
+      <span class="round-dots">${ROUNDS.map(r=>`<span class="round-dot ${hasSubmission(m.id,r.key)?'filled':''}" title="${r.label}"></span>`).join('')}<span class="round-dot-review ${hasReview60?'filled':''}" title="${esc(REVIEW60_ROUND.label)}"></span></span>
     </button>`);
     b.addEventListener('click', ()=>{ mentorState.menteeId=m.id; mentorState.round=latestSubmittedRound(m.id); renderMentor(); });
     roster.appendChild(b);
@@ -3757,10 +3761,12 @@ function renderLeader(){
   roster.innerHTML = '';
   list.forEach(m=>{
     const latest = latestSubmittedRound(m.id);
+    const hasReview60 = hasSubmission(m.id, REVIEW60_ROUND.key);
+    const subStatus = latest ? (' · Skill '+fmt1(avg(getResponse(m.id,latest).skill))+'/5') : (hasReview60 ? ' · '+REVIEW60_ROUND.short+' only' : ' · Not started');
     const b = el(`<button class="roster-item ${m.id===leaderState.menteeId?'active':''}">
       <span class="name">${esc(m.name)}</span>
-      <span class="sub">${esc(mentorOf(m.id).name)} ${latest?(' · Skill '+fmt1(avg(getResponse(m.id,latest).skill))+'/5'):' · Not started'}</span>
-      <span class="round-dots">${ROUNDS.map(r=>`<span class="round-dot ${hasSubmission(m.id,r.key)?'filled':''}" title="${r.label}"></span>`).join('')}</span>
+      <span class="sub">${esc(mentorOf(m.id).name)} ${subStatus}</span>
+      <span class="round-dots">${ROUNDS.map(r=>`<span class="round-dot ${hasSubmission(m.id,r.key)?'filled':''}" title="${r.label}"></span>`).join('')}<span class="round-dot-review ${hasReview60?'filled':''}" title="${esc(REVIEW60_ROUND.label)}"></span></span>
     </button>`);
     b.addEventListener('click', ()=>{ leaderState.menteeId=m.id; leaderState.round=latestSubmittedRound(m.id); renderLeader(); });
     roster.appendChild(b);

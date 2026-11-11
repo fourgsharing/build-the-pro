@@ -488,14 +488,19 @@
   .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
 
-  /* ============ Personal Leadership Redesign Plan (closing infographic) ============ */
-  .tl-wrap{ position:relative; }
+  /* ============ Personal Leadership Redesign Plan (closing infographic) ============
+     Deliberately theme-locked: this is a printable/shareable poster (see the
+     "Download as Image" button, which draws it onto the client's actual artwork),
+     not a themed UI panel — it should always look like that artwork, the same
+     way a certificate doesn't flip to dark mode. Every color below is a literal
+     value, never var(--ink)/var(--surface)/etc., on purpose. */
+  .tl-wrap{ position:relative; background:#FAF7F0; border:1px solid #E5DFD0 !important; border-radius:var(--radius-card); padding:26px 24px; }
   .tl-header{ position:relative; padding:2px 0 22px; }
-  .tl-eyebrow{ font-size:11px; font-weight:800; letter-spacing:.14em; color:var(--ink-mute); text-transform:uppercase; margin-bottom:5px; }
-  .tl-title{ font-size:25px; font-weight:800; color:var(--ink); margin:0 0 6px; letter-spacing:-.01em; line-height:1.15; }
-  .tl-subtitle{ font-size:13.5px; color:var(--ink-mute); margin:0; }
-  .tl-tagline{ position:absolute; top:0; right:4px; font-size:13px; font-weight:700; font-style:italic; color:var(--accent-skill); transform:rotate(-4deg); text-align:right; line-height:1.3; max-width:170px; }
-  .tl-tagline em{ display:block; height:2px; width:72%; margin:3px 0 0 auto; background:var(--accent-skill); border-radius:2px; opacity:.6; font-style:normal; }
+  .tl-eyebrow{ font-size:11px; font-weight:800; letter-spacing:.14em; color:#7a7265; text-transform:uppercase; margin-bottom:5px; }
+  .tl-title{ font-size:25px; font-weight:800; color:#242018; margin:0 0 6px; letter-spacing:-.01em; line-height:1.15; }
+  .tl-subtitle{ font-size:13.5px; color:#7a7265; margin:0; }
+  .tl-tagline{ position:absolute; top:0; right:4px; font-size:13px; font-weight:700; font-style:italic; color:#2E8B57; transform:rotate(-4deg); text-align:right; line-height:1.3; max-width:170px; }
+  .tl-tagline em{ display:block; height:2px; width:72%; margin:3px 0 0 auto; background:#2E8B57; border-radius:2px; opacity:.6; font-style:normal; }
   @media (max-width:640px){ .tl-tagline{ display:none; } }
 
   .tl-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:30px; margin-bottom:26px; }
@@ -507,38 +512,38 @@
      once the grid drops to 2 or 1 columns per row (see media queries below). */
   .tl-col.tl-has-next::after{
     content:'→'; position:absolute; top:50%; right:-30px; transform:translateY(-50%);
-    color:var(--ink-mute); font-size:16px; opacity:.6; z-index:2;
+    color:#8a8276; font-size:16px; opacity:.7; z-index:2;
   }
   @media (max-width:980px){
     .tl-col.tl-has-next::after{ display:none; }
     .tl-grid > .tl-col:nth-child(odd):not(:last-child)::after{
       content:'→'; position:absolute; top:50%; right:-24px; transform:translateY(-50%);
-      color:var(--ink-mute); font-size:16px; opacity:.6; z-index:2;
+      color:#8a8276; font-size:16px; opacity:.7; z-index:2;
     }
   }
   @media (max-width:560px){ .tl-grid > .tl-col::after{ display:none !important; } }
-  .tl-col-head{ display:flex; align-items:center; gap:6px; margin-bottom:22px; }
+  .tl-col-head{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:22px; padding-right:46px; }
   .tl-phase{ font-size:11px; font-weight:800; letter-spacing:.04em; padding:4px 12px; border-radius:999px; white-space:nowrap; }
-  .tl-round{ font-size:8.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-mute); background:rgba(0,0,0,.05); padding:3px 8px; border-radius:999px; white-space:nowrap; }
+  .tl-round{ font-size:8.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#7a7265; background:rgba(20,15,5,.06); padding:3px 8px; border-radius:999px; white-space:nowrap; }
   .tl-icon-badge{
     position:absolute; top:14px; right:14px; width:38px; height:38px; border-radius:11px;
-    display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.55);
+    display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.65);
     box-shadow:0 2px 5px rgba(20,20,10,.08);
   }
   .tl-icon-badge svg{ width:21px; height:21px; display:block; }
-  .tl-q{ font-weight:700; font-size:13.5px; margin:0 0 4px; color:var(--ink); padding-right:40px; }
-  .tl-desc{ font-size:10.5px; color:var(--ink-mute); margin-bottom:14px; line-height:1.45; padding-right:12px; }
+  .tl-q{ font-weight:700; font-size:13.5px; margin:0 0 4px; color:#242018; }
+  .tl-desc{ font-size:10.5px; color:#7a7265; margin-bottom:14px; line-height:1.45; }
   .tl-field{ margin-bottom:13px; }
   .tl-field:last-child{ margin-bottom:0; }
-  .tl-field-label{ font-size:9px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-mute); margin-bottom:4px; }
-  .tl-field-value{ font-size:12px; color:var(--ink); line-height:1.5; padding-bottom:6px; border-bottom:1px solid var(--tl-line); }
-  .tl-field-value.empty{ color:var(--ink-mute); font-style:italic; }
-  .tl-pending{ font-size:12px; color:var(--ink-mute); margin-top:10px; }
+  .tl-field-label{ font-size:9px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#7a7265; margin-bottom:4px; }
+  .tl-field-value{ font-size:12px; color:#242018; line-height:1.5; padding-bottom:6px; border-bottom:1px solid var(--tl-line); }
+  .tl-field-value.empty{ color:#8a8276; font-style:italic; }
+  .tl-pending{ font-size:12px; color:#8a8276; margin-top:10px; }
 
-  .tl-col-start{ background:#FFF6DE; border-color:#F0D780; --tl-line:rgba(58,47,6,.18); }
-  .tl-col-now{ background:#E3F1FC; border-color:#A9D4F5; --tl-line:rgba(15,55,90,.16); }
-  .tl-col-next{ background:#E3F6E8; border-color:#AFE0BC; --tl-line:rgba(15,60,35,.16); }
-  .tl-col-goals{ background:#EFE7FB; border-color:#CBB8EC; --tl-line:rgba(50,25,80,.16); }
+  .tl-col.tl-col-start{ background:#FFF6DE; border-color:#F0D780; --tl-line:rgba(58,47,6,.18); }
+  .tl-col.tl-col-now{ background:#E3F1FC; border-color:#A9D4F5; --tl-line:rgba(15,55,90,.16); }
+  .tl-col.tl-col-next{ background:#E3F6E8; border-color:#AFE0BC; --tl-line:rgba(15,60,35,.16); }
+  .tl-col.tl-col-goals{ background:#EFE7FB; border-color:#CBB8EC; --tl-line:rgba(50,25,80,.16); }
   .tl-phase.tl-col-start{ background:#F6C945; color:#3a2f06; }
   .tl-phase.tl-col-now{ background:#4FA8E8; color:#fff; }
   .tl-phase.tl-col-next{ background:#45AE6B; color:#fff; }
@@ -554,24 +559,9 @@
   .tl-banner-step{ display:flex; flex-direction:column; align-items:center; gap:7px; width:120px; }
   .tl-banner-step .tl-step-icon{ font-size:26px; line-height:1; }
   .tl-step-pill{ background:#F6D978; color:#3a2f06; font-size:9.5px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; padding:3px 11px; border-radius:999px; }
-  .tl-step-label{ font-weight:700; font-size:13.5px; color:var(--ink); }
-  .tl-banner-sep{ flex:1; min-width:36px; max-width:70px; border-top:2px dashed var(--ink-mute); opacity:.45; margin-top:17px; }
+  .tl-step-label{ font-weight:700; font-size:13.5px; color:#242018; }
+  .tl-banner-sep{ flex:1; min-width:36px; max-width:70px; border-top:2px dashed #8a8276; opacity:.55; margin-top:17px; }
   .tl-mountains{ position:absolute; left:0; right:0; bottom:0; width:100%; height:72px; z-index:0; opacity:.55; pointer-events:none; }
-
-  @media (prefers-color-scheme:dark){
-    :root:not([data-theme="light"]) .tl-col-start{ background:#3a3220; border-color:#5c4e2a; --tl-line:rgba(255,235,180,.18); }
-    :root:not([data-theme="light"]) .tl-col-now{ background:#17293a; border-color:#2a4f6e; --tl-line:rgba(190,225,255,.16); }
-    :root:not([data-theme="light"]) .tl-col-next{ background:#17301f; border-color:#285c3a; --tl-line:rgba(190,255,210,.16); }
-    :root:not([data-theme="light"]) .tl-col-goals{ background:#271f38; border-color:#4a3a66; --tl-line:rgba(225,200,255,.18); }
-    :root:not([data-theme="light"]) .tl-icon-badge{ background:rgba(0,0,0,.22); }
-    :root:not([data-theme="light"]) .tl-round{ background:rgba(0,0,0,.18); }
-  }
-  :root[data-theme="dark"] .tl-col-start{ background:#3a3220; border-color:#5c4e2a; --tl-line:rgba(255,235,180,.18); }
-  :root[data-theme="dark"] .tl-col-now{ background:#17293a; border-color:#2a4f6e; --tl-line:rgba(190,225,255,.16); }
-  :root[data-theme="dark"] .tl-col-next{ background:#17301f; border-color:#285c3a; --tl-line:rgba(190,255,210,.16); }
-  :root[data-theme="dark"] .tl-col-goals{ background:#271f38; border-color:#4a3a66; --tl-line:rgba(225,200,255,.18); }
-  :root[data-theme="dark"] .tl-icon-badge{ background:rgba(0,0,0,.22); }
-  :root[data-theme="dark"] .tl-round{ background:rgba(0,0,0,.18); }
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -2069,14 +2059,14 @@ function journeyTimelineHtml(menteeId){
   </div>`;
 
   const mountains = `<svg class="tl-mountains" viewBox="0 0 900 90" preserveAspectRatio="none" aria-hidden="true">
-    <polygon points="0,90 90,28 180,90" fill="var(--surface-3)"/>
-    <polygon points="700,90 800,18 900,90" fill="var(--surface-3)"/>
-    <polygon points="55,90 125,48 195,90" fill="var(--surface-2)"/>
-    <polygon points="645,90 735,42 825,90" fill="var(--surface-2)"/>
-    <circle cx="35" cy="80" r="9" fill="var(--accent-skill)" opacity=".35"/>
-    <rect x="32" y="84" width="6" height="9" fill="var(--ink-mute)" opacity=".3"/>
-    <circle cx="865" cy="80" r="9" fill="var(--accent-skill)" opacity=".35"/>
-    <rect x="862" y="84" width="6" height="9" fill="var(--ink-mute)" opacity=".3"/>
+    <polygon points="0,90 90,28 180,90" fill="#E5E8E3"/>
+    <polygon points="700,90 800,18 900,90" fill="#E5E8E3"/>
+    <polygon points="55,90 125,48 195,90" fill="#F0F2EF"/>
+    <polygon points="645,90 735,42 825,90" fill="#F0F2EF"/>
+    <circle cx="35" cy="80" r="9" fill="#2E8B57" opacity=".35"/>
+    <rect x="32" y="84" width="6" height="9" fill="#7a7265" opacity=".3"/>
+    <circle cx="865" cy="80" r="9" fill="#2E8B57" opacity=".35"/>
+    <rect x="862" y="84" width="6" height="9" fill="#7a7265" opacity=".3"/>
   </svg>`;
 
   const banner = `<div class="tl-banner">

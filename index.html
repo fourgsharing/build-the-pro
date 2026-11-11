@@ -496,17 +496,16 @@
      value, never var(--ink)/var(--surface)/etc., on purpose. */
   /* Deliberately wider than the page's own 1120px container — with 4 columns,
      the normal content width left each one cramped and wrapping heavily.
-     Two layers, because a single element can't both "break out to full
-     viewport width" and "cap at a max-width while staying centered" at once:
-     .tl-breakout escapes the parent's width via the standard left/right:50%
-     + negative-50vw-margin trick (this is what actually centers correctly
-     regardless of the parent's own width — a transform-based shortcut does
-     NOT, since percentage offsets on a relatively-positioned element resolve
-     against the *parent's* width, not the viewport); .tl-wrap then caps and
-     re-centers the actual visible card inside that full-width strip. */
-  .tl-breakout{ position:relative; left:50%; right:50%; width:100vw; margin-left:-50vw; margin-right:-50vw; }
+     Viewport-unit breakout tricks (100vw + negative margins) turned out
+     unreliable here — they can misbehave depending on scrollbar width and
+     how the page is embedded — so the actual bleed amount on each side is
+     measured and applied in JS (fitInfographicWidth, near the bottom of the
+     script) from the card's real on-screen position, which can never
+     overflow the real viewport because it's based on what's actually there
+     rather than assumed CSS units. This max-width is just the static
+     fallback before JS runs. */
   .tl-wrap{
-    max-width:1500px; margin:0 auto; box-sizing:border-box;
+    max-width:1300px; margin:0 auto; box-sizing:border-box;
     background:#FAF7F0; border:1px solid #E5DFD0 !important; border-radius:var(--radius-card);
     padding:26px clamp(20px, 5vw, 56px);
   }
@@ -2103,16 +2102,14 @@ function journeyTimelineHtml(menteeId){
     <div class="tl-tagline">Same Goal, Bigger Impact!<em></em></div>
   </div>`;
 
-  return `<div class="tl-breakout">
-    <div class="card tl-wrap" style="break-inside:avoid;">
-      <div class="card-body">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
-        <button type="button" class="btn btn-primary btn-sm" onclick="downloadJourneyImage('${menteeId}')">📥 Download as Image</button>
-      </div>
-      ${header}
-      ${grid}
-      ${banner}
-      </div>
+  return `<div class="card tl-wrap" style="break-inside:avoid;">
+    <div class="card-body">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+      <button type="button" class="btn btn-primary btn-sm" onclick="downloadJourneyImage('${menteeId}')">📥 Download as Image</button>
+    </div>
+    ${header}
+    ${grid}
+    ${banner}
     </div>
   </div>`;
 }
@@ -2205,6 +2202,30 @@ function downloadJourneyImage(menteeId){
   }
 }
 
+/* Widens the infographic card by exactly however much room actually exists
+   around it, measured from its real on-screen position — not assumed from
+   viewport units, which turned out unreliable (varies with scrollbar width,
+   iframe embedding, etc. and could force horizontal scrolling). This can
+   never overflow the real viewport because it's based on what's actually
+   there. Re-run on resize so it keeps fitting as the window changes size. */
+function fitInfographicWidth(wrap){
+  wrap.style.marginLeft = ''; wrap.style.marginRight = ''; wrap.style.width = '';
+  const parent = wrap.parentElement;
+  if(!parent) return;
+  const rect = parent.getBoundingClientRect();
+  const vw = document.documentElement.clientWidth;
+  const bleed = Math.max(0, Math.min(90, rect.left - 12, vw - rect.right - 12));
+  if(bleed > 4){
+    wrap.style.marginLeft = `-${bleed}px`;
+    wrap.style.marginRight = `-${bleed}px`;
+    wrap.style.width = `calc(100% + ${bleed*2}px)`;
+  }
+}
+function fitAllInfographics(){
+  document.querySelectorAll('.tl-wrap').forEach(fitInfographicWidth);
+}
+window.addEventListener('resize', fitAllInfographics);
+
 function renderReview60Form(){
   if(!menteeState.id) return;
   const menteeId = menteeState.id;
@@ -2282,6 +2303,7 @@ function renderReview60Form(){
 
   container.innerHTML = html;
   wireReview60Form(resp, refl, locked);
+  fitAllInfographics();
 }
 
 function wireReview60Form(resp, refl, locked){
@@ -3205,6 +3227,7 @@ function renderMentor(){
   if(!mentorState.menteeId){ detail.innerHTML = `<div class="detail-empty">No mentees assigned yet.</div>`; return; }
   try{
     detail.innerHTML = renderMenteeDetail(mentorState.menteeId, mentorState.round, true);
+    fitAllInfographics();
   }catch(e){
     detail.innerHTML = `<div class="detail-empty">Error rendering detail: ${e.message}</div>`;
     console.error('renderMenteeDetail error:', e);
@@ -3809,6 +3832,7 @@ function renderLeader(){
   if(!leaderState.menteeId){ detail.innerHTML = `<div class="detail-empty">No mentees under this filter.</div>`; return; }
   try{
     detail.innerHTML = renderMenteeDetail(leaderState.menteeId, leaderState.round, true);
+    fitAllInfographics();
   }catch(e){
     detail.innerHTML = `<div class="detail-empty">Error rendering detail: ${e.message}</div>`;
     console.error('renderMenteeDetail error:', e);

@@ -498,10 +498,25 @@
   .tl-tagline em{ display:block; height:2px; width:72%; margin:3px 0 0 auto; background:var(--accent-skill); border-radius:2px; opacity:.6; font-style:normal; }
   @media (max-width:640px){ .tl-tagline{ display:none; } }
 
-  .tl-grid{ display:flex; align-items:stretch; gap:0; margin-bottom:26px; flex-wrap:wrap; }
-  .tl-col{ flex:1 1 200px; border-radius:14px; padding:18px 16px 16px; border:1px solid; position:relative; box-shadow:0 1px 3px rgba(20,20,10,.05); min-width:200px; }
-  .tl-arrow{ flex:none; width:26px; display:flex; align-items:center; justify-content:center; color:var(--ink-mute); font-size:16px; opacity:.6; }
-  @media (max-width:860px){ .tl-arrow{ display:none; } .tl-col{ flex:1 1 44%; } }
+  .tl-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:30px; margin-bottom:26px; }
+  @media (max-width:980px){ .tl-grid{ grid-template-columns:repeat(2,1fr); gap:20px; } }
+  @media (max-width:560px){ .tl-grid{ grid-template-columns:1fr; } }
+  .tl-col{ border-radius:14px; padding:18px 16px 16px; border:1px solid; position:relative; box-shadow:0 1px 3px rgba(20,20,10,.05); min-width:0; }
+  /* Arrow sits in the grid gap, pointing from this column to the next — only
+     meaningful between columns that are actually side by side, so it's hidden
+     once the grid drops to 2 or 1 columns per row (see media queries below). */
+  .tl-col.tl-has-next::after{
+    content:'→'; position:absolute; top:50%; right:-30px; transform:translateY(-50%);
+    color:var(--ink-mute); font-size:16px; opacity:.6; z-index:2;
+  }
+  @media (max-width:980px){
+    .tl-col.tl-has-next::after{ display:none; }
+    .tl-grid > .tl-col:nth-child(odd):not(:last-child)::after{
+      content:'→'; position:absolute; top:50%; right:-24px; transform:translateY(-50%);
+      color:var(--ink-mute); font-size:16px; opacity:.6; z-index:2;
+    }
+  }
+  @media (max-width:560px){ .tl-grid > .tl-col::after{ display:none !important; } }
   .tl-col-head{ display:flex; align-items:center; gap:6px; margin-bottom:22px; }
   .tl-phase{ font-size:11px; font-weight:800; letter-spacing:.04em; padding:4px 12px; border-radius:999px; white-space:nowrap; }
   .tl-round{ font-size:8.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-mute); background:rgba(0,0,0,.05); padding:3px 8px; border-radius:999px; white-space:nowrap; }
@@ -2033,11 +2048,11 @@ function journeyTimelineHtml(menteeId){
     next: `<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="13" r="8.2" stroke="#2E8B57" stroke-width="1.6"/><circle cx="11" cy="13" r="4.6" stroke="#2E8B57" stroke-width="1.6"/><circle cx="11" cy="13" r="1.3" fill="#2E8B57"/><path d="M15.5 2.5 L21 2.5 L21 8 L17.5 11.5 L12 6 Z" fill="#2E8B57"/></svg>`,
     goals: `<svg viewBox="0 0 24 24"><path d="M12 1.5 L14.9 8.6 L22.5 9.3 L16.8 14.4 L18.5 21.8 L12 17.9 L5.5 21.8 L7.2 14.4 L1.5 9.3 L9.1 8.6 Z" fill="#9B6FD6"/></svg>`
   };
-  function colHtml(cls, phase, roundBadge, iconKey, question, desc, fields, submitted){
+  function colHtml(cls, phase, roundBadge, iconKey, question, desc, fields, submitted, hasNext){
     const body = submitted
       ? fields.map(fieldHtml).join('')
       : `<p class="tl-pending">Belum submit round ini.</p>`;
-    return `<div class="tl-col ${cls}">
+    return `<div class="tl-col ${cls}${hasNext?' tl-has-next':''}">
       <div class="tl-icon-badge">${TL_ICONS[iconKey]}</div>
       <div class="tl-col-head"><span class="tl-phase ${cls}">${phase}</span><span class="tl-round">${roundBadge}</span></div>
       <div class="tl-q">${question}</div>
@@ -2047,13 +2062,10 @@ function journeyTimelineHtml(menteeId){
   }
 
   const grid = `<div class="tl-grid">
-    ${colHtml('tl-col-start','Start','Beginning','start','Di mana saya mulai?','Goal awal, kondisi diri, kekuatan, area pengembangan, dan VIP yang saya pilih.', startFields, hasBefore)}
-    <div class="tl-arrow">&rarr;</div>
-    ${colHtml('tl-col-now','Now','Mid','now','Apa yang sudah terjadi?','Progres yang sudah dicapai, perubahan yang terlihat, dan gap yang masih ada.', nowFields, hasMid)}
-    <div class="tl-arrow">&rarr;</div>
-    ${colHtml('tl-col-next','Next 30 Days','Leadership Shift','next','Apa yang akan saya lakukan?','Fokus pada satu orang, satu kemampuan, serta langkah konkret selama 30 hari ke depan.', nextFields, hasReview)}
-    <div class="tl-arrow">&rarr;</div>
-    ${colHtml('tl-col-goals','Goals','Final','goals','Apa hasil akhirnya?','Transformasi yang ingin saya capai dan dampak yang ingin saya lihat pada diri saya dan VIP saya.', goalsFields, hasFinal)}
+    ${colHtml('tl-col-start','Start','Beginning','start','Di mana saya mulai?','Goal awal, kondisi diri, kekuatan, area pengembangan, dan VIP yang saya pilih.', startFields, hasBefore, true)}
+    ${colHtml('tl-col-now','Now','Mid','now','Apa yang sudah terjadi?','Progres yang sudah dicapai, perubahan yang terlihat, dan gap yang masih ada.', nowFields, hasMid, true)}
+    ${colHtml('tl-col-next','Next 30 Days','Leadership Shift','next','Apa yang akan saya lakukan?','Fokus pada satu orang, satu kemampuan, serta langkah konkret selama 30 hari ke depan.', nextFields, hasReview, true)}
+    ${colHtml('tl-col-goals','Goals','Final','goals','Apa hasil akhirnya?','Transformasi yang ingin saya capai dan dampak yang ingin saya lihat pada diri saya dan VIP saya.', goalsFields, hasFinal, false)}
   </div>`;
 
   const mountains = `<svg class="tl-mountains" viewBox="0 0 900 90" preserveAspectRatio="none" aria-hidden="true">

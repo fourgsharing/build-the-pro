@@ -385,6 +385,8 @@
   .detail-header .meta{ font-size:12.5px; color:var(--ink-mute); }
   .round-pills{ display:flex; gap:6px; }
   .round-pill{ border:1px solid var(--border); background:var(--surface); border-radius:999px; padding:6px 13px; font-size:12.5px; font-weight:600; color:var(--ink-mute); cursor:pointer; }
+  .round-pill.review60-jump{ border-color:var(--accent-drive); color:var(--accent-drive); margin-left:4px; }
+  .round-pill.review60-jump:hover{ background:color-mix(in oklab, var(--accent-drive) 10%, transparent); }
   .round-pill.active{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
   .round-pill.missing{ opacity:.45; cursor:default; }
 
@@ -3249,7 +3251,9 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     const has = hasSubmission(menteeId, r.key);
     const active = r.key===activeRound;
     return `<button class="round-pill ${active?'active':''} ${has?'':'missing'}" data-round="${r.key}" ${has?'':'disabled'}>${r.short}</button>`;
-  }).join('');
+  }).join('') + (hasSubmission(menteeId, REVIEW60_ROUND.key)
+    ? `<button class="round-pill review60-jump" type="button" onclick="document.getElementById('review60-detail-section').scrollIntoView({behavior:'smooth',block:'start'})">${esc(REVIEW60_ROUND.short)}</button>`
+    : '');
 
   let head = `<div class="detail-header">
     <div><h2>${esc(mentee.name)}</h2><div class="meta">${showMentorName?('Mentor: '+esc(mentor.name)+' · '):''}90-day Build The Pro tracker</div></div>
@@ -3431,6 +3435,7 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
   if(hasReview60){
     const r60 = getResponse(menteeId, REVIEW60_ROUND.key).reflections.review60;
     const lbl = (opts,key) => (opts.find(o=>o.key===key)||{}).label || '—';
+    out += `<div id="review60-detail-section"></div>`;
     out += `<div class="card"><div class="card-head"><div><div class="tag">${esc(REVIEW60_ROUND.short)}</div><h3>The 30-Day Leadership Shift</h3></div></div>
       <div class="card-body">
       <div class="refl-block"><h4>My Progress</h4>${nb(lbl(REVIEW60_PROGRESS_OPTIONS,r60.progress))}</div>

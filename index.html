@@ -327,8 +327,10 @@
   .round-dots{ display:flex; gap:4px; }
   .round-dot{ width:8px; height:8px; border-radius:50%; border:1.5px solid var(--ink-mute); }
   .round-dot.filled{ background:var(--status-good); border-color:var(--status-good); }
+  .round-dot.unlocked{ background:var(--status-critical); border-color:var(--status-critical); }
   .round-dot-review{ width:8px; height:8px; border-radius:2px; border:1.5px solid var(--ink-mute); margin-left:2px; }
   .round-dot-review.filled{ background:var(--accent-drive); border-color:var(--accent-drive); }
+  .round-dot-review.unlocked{ background:var(--status-critical); border-color:var(--status-critical); }
 
   .person-list{ margin-top:14px; border-top:1px solid var(--border); padding-top:12px; }
   .person-list-title{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-mute); margin-bottom:8px; }
@@ -389,6 +391,8 @@
   .round-pill.review60-jump:hover{ background:color-mix(in oklab, var(--accent-drive) 10%, transparent); }
   .round-pill.active{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
   .round-pill.missing{ opacity:.45; cursor:default; }
+  .round-pill.unlocked{ border-color:var(--status-critical); color:var(--status-critical); }
+  .round-pill.unlocked.active{ background:var(--status-critical); color:#fff; border-color:var(--status-critical); }
 
   .legend-row{ display:flex; gap:16px; align-items:center; font-size:12px; color:var(--ink-soft); margin-top:8px; flex-wrap:wrap; }
   .legend-swatch{ display:inline-flex; align-items:center; gap:6px; }
@@ -1158,8 +1162,20 @@ function hasSubmission(menteeId, round){
   const r = DB.responses[menteeId] && DB.responses[menteeId][round];
   return !!(r && r.submittedAt);
 }
+/* True once a response record exists for this round, whether or not it's
+   currently submitted — covers an "unlocked" round whose answers are still
+   sitting in Firestore, just waiting on the mentee to resubmit. */
+function hasRoundData(menteeId, round){
+  return !!(DB.responses[menteeId] && DB.responses[menteeId][round]);
+}
 function latestSubmittedRound(menteeId){
   for(let i=ROUNDS.length-1;i>=0;i--){ if(hasSubmission(menteeId, ROUNDS[i].key)) return ROUNDS[i].key; }
+  return null;
+}
+function latestRoundWithData(menteeId){
+  const submitted = latestSubmittedRound(menteeId);
+  if(submitted) return submitted;
+  for(let i=ROUNDS.length-1;i>=0;i--){ if(hasRoundData(menteeId, ROUNDS[i].key)) return ROUNDS[i].key; }
   return null;
 }
 function previousRoundKey(roundKey){
@@ -3222,7 +3238,7 @@ mentorWho.addEventListener('change', ()=>{
   mentorState.mentorId = mentorWho.value;
   const list = menteesOf(mentorState.mentorId);
   mentorState.menteeId = list.length ? list[0].id : null;
-  mentorState.round = mentorState.menteeId ? latestSubmittedRound(mentorState.menteeId) : null;
+  mentorState.round = mentorState.menteeId ? latestRoundWithData(mentorState.menteeId) : null;
   renderMentor();
 });
 
@@ -3250,7 +3266,7 @@ function renderMentor(){
   const list = menteesOf(mentorState.mentorId);
   if(!mentorState.menteeId || !list.find(m=>m.id===mentorState.menteeId)){
     mentorState.menteeId = list.length ? list[0].id : null;
-    mentorState.round = mentorState.menteeId ? latestSubmittedRound(mentorState.menteeId) : null;
+    mentorState.round = mentorState.menteeId ? latestRoundWithData(mentorState.menteeId) : null;
   }
   const roster = document.getElementById('mentor-roster');
   roster.innerHTML = '';
@@ -3258,13 +3274,14 @@ function renderMentor(){
     const latest = latestSubmittedRound(m.id);
     const avgSkill = latest ? avg(getResponse(m.id, latest).skill) : null;
     const hasReview60 = hasSubmission(m.id, REVIEW60_ROUND.key);
-    const subLabel = avgSkill!==null ? 'Skill avg '+fmt1(avgSkill)+'/5' : (hasReview60 ? REVIEW60_ROUND.short+' only' : 'No submissions yet');
+    const anyUnlocked = ROUNDS.some(r=>!hasSubmission(m.id,r.key) && hasRoundData(m.id,r.key)) || (!hasReview60 && hasRoundData(m.id, REVIEW60_ROUND.key));
+    const subLabel = avgSkill!==null ? 'Skill avg '+fmt1(avgSkill)+'/5' : (hasReview60 ? REVIEW60_ROUND.short+' only' : (anyUnlocked ? '🔓 Unlocked — awaiting resubmission' : 'No submissions yet'));
     const b = el(`<button class="roster-item ${m.id===mentorState.menteeId?'active':''}">
       <span class="name">${esc(m.name)}</span>
       <span class="sub">${subLabel}</span>
-      <span class="round-dots">${ROUNDS.map(r=>`<span class="round-dot ${hasSubmission(m.id,r.key)?'filled':''}" title="${r.label}"></span>`).join('')}<span class="round-dot-review ${hasReview60?'filled':''}" title="${esc(REVIEW60_ROUND.label)}"></span></span>
+      <span class="round-dots">${ROUNDS.map(r=>`<span class="round-dot ${hasSubmission(m.id,r.key)?'filled':(hasRoundData(m.id,r.key)?'unlocked':'')}" title="${r.label}"></span>`).join('')}<span class="round-dot-review ${hasReview60?'filled':(hasRoundData(m.id,REVIEW60_ROUND.key)?'unlocked':'')}" title="${esc(REVIEW60_ROUND.label)}"></span></span>
     </button>`);
-    b.addEventListener('click', ()=>{ mentorState.menteeId=m.id; mentorState.round=latestSubmittedRound(m.id); renderMentor(); });
+    b.addEventListener('click', ()=>{ mentorState.menteeId=m.id; mentorState.round=latestRoundWithData(m.id); renderMentor(); });
     roster.appendChild(b);
   });
 
@@ -3348,18 +3365,24 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
   const mentee = MENTEES.find(m=>m.id===menteeId);
   const mentor = mentorOf(menteeId);
   const anySubmitted = ROUNDS.some(r=>hasSubmission(menteeId,r.key));
+  const anyRoundData = ROUNDS.some(r=>hasRoundData(menteeId,r.key));
+  const hasReview60Data = hasRoundData(menteeId, REVIEW60_ROUND.key);
 
   const pills = ROUNDS.map(r=>{
     const has = hasSubmission(menteeId, r.key);
+    const unlocked = !has && hasRoundData(menteeId, r.key);
     const active = r.key===activeRound;
-    return `<button class="round-pill ${active?'active':''} ${has?'':'missing'}" data-round="${r.key}" ${has?'':'disabled'}>${r.short}</button>`;
-  }).join('') + (hasSubmission(menteeId, REVIEW60_ROUND.key)
-    ? `<button class="round-pill review60-jump" type="button" onclick="document.getElementById('review60-detail-section').scrollIntoView({behavior:'smooth',block:'start'})">${esc(REVIEW60_ROUND.short)}</button>`
+    const cls = has ? '' : (unlocked ? 'unlocked' : 'missing');
+    return `<button class="round-pill ${active?'active':''} ${cls}" data-round="${r.key}" ${(!has && !unlocked)?'disabled':''} title="${unlocked?'Unlocked — awaiting resubmission':''}">${r.short}${unlocked?' 🔓':''}</button>`;
+  }).join('') + (hasReview60Data
+    ? `<button class="round-pill review60-jump ${hasSubmission(menteeId,REVIEW60_ROUND.key)?'':'unlocked'}" type="button" onclick="document.getElementById('review60-detail-section').scrollIntoView({behavior:'smooth',block:'start'})">${esc(REVIEW60_ROUND.short)}${hasSubmission(menteeId,REVIEW60_ROUND.key)?'':' 🔓'}</button>`
     : '');
 
   // Resolved up front (not just inside the "has any main round" branch below)
   // so the header's Unlock button always matches whichever round is shown.
-  const round = activeRound && hasSubmission(menteeId, activeRound) ? activeRound : latestSubmittedRound(menteeId);
+  // Falls back through unlocked-but-has-data rounds too, so a mentee whose
+  // only round got unlocked doesn't just vanish from view.
+  const round = activeRound && hasRoundData(menteeId, activeRound) ? activeRound : latestRoundWithData(menteeId);
   const unlockBtn = (roundKey, label, small) => `<button class="btn btn-ghost ${small?'btn-sm':''}" onclick="unlockRound('${menteeId}','${roundKey}', this)" style="white-space:nowrap;font-size:${small?12:13}px;padding:${small?'5px 10px':'6px 14px'};" title="Let ${esc(mentee.name)} edit and resubmit ${esc(label)}">🔓 Unlock ${esc(label)}</button>`;
 
   let head = `<div class="detail-header">
@@ -3367,21 +3390,24 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="round-pills">${pills}</div>
       <button class="btn" onclick="downloadMenteePdf('${menteeId}','${activeRound}')" style="white-space:nowrap;font-size:13px;padding:6px 14px;">📄 Download PDF</button>
-      ${round ? unlockBtn(round, ROUNDS.find(r=>r.key===round)?.short || round, false) : ''}
+      ${round && hasSubmission(menteeId, round) ? unlockBtn(round, ROUNDS.find(r=>r.key===round)?.short || round, false) : ''}
     </div>
   </div>`;
 
   const hasReview60 = hasSubmission(menteeId, REVIEW60_ROUND.key);
-  if(!anySubmitted && !hasReview60){
+  if(!anyRoundData && !hasReview60Data){
     return head + `<div class="detail-empty">No rounds submitted yet — this mentee's Before round is still pending.</div>`;
   }
 
   let out = head;
   const nb = (val) => val ? `<p>${esc(val)}</p>` : '<p class="empty-line">Not filled in.</p>';
 
-  if(!anySubmitted){
+  if(!anyRoundData){
     out += `<div class="detail-empty">The Before/Mid/After/Final rounds haven't been started yet — only the 60-Day Leadership Review below.</div>`;
   } else {
+    if(round && !hasSubmission(menteeId, round)){
+      out += `<div style="background:color-mix(in oklab, var(--status-critical) 10%, var(--surface));border:1px solid var(--status-critical);border-radius:var(--radius-card);padding:12px 16px;margin-bottom:16px;color:var(--status-critical);font-size:13.5px;font-weight:600;">🔓 ${esc(ROUNDS.find(r=>r.key===round)?.short || round)} is unlocked — the mentee can still edit and resubmit it from their link. These are their last saved answers.</div>`;
+    }
 
   // Trend chart across all submitted rounds
   const skillSeries = ROUNDS.map((r,i)=>({x:i, y: hasSubmission(menteeId,r.key) ? avg(getResponse(menteeId,r.key).skill) : null}));
@@ -3538,13 +3564,16 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
 
   } // end if(anySubmitted)
 
-  // 60-Day Leadership Review — separate checkpoint, shown if submitted
-  if(hasReview60){
+  // 60-Day Leadership Review — separate checkpoint, shown if submitted OR
+  // unlocked-with-data (so leadership can still see the mentee's last saved
+  // answers while it's reopened for editing)
+  if(hasReview60Data){
     const r60 = getResponse(menteeId, REVIEW60_ROUND.key).reflections.review60;
     const lbl = (opts,key) => (opts.find(o=>o.key===key)||{}).label || '—';
     out += `<div id="review60-detail-section"></div>`;
-    out += `<div class="card"><div class="card-head"><div><div class="tag">${esc(REVIEW60_ROUND.short)}</div><h3>The 30-Day Leadership Shift</h3></div>${unlockBtn(REVIEW60_ROUND.key, REVIEW60_ROUND.short, true)}</div>
+    out += `<div class="card"><div class="card-head"><div><div class="tag">${esc(REVIEW60_ROUND.short)}</div><h3>The 30-Day Leadership Shift</h3></div>${hasReview60?unlockBtn(REVIEW60_ROUND.key, REVIEW60_ROUND.short, true):''}</div>
       <div class="card-body">
+      ${!hasReview60?`<div style="background:color-mix(in oklab, var(--status-critical) 10%, var(--surface));border:1px solid var(--status-critical);border-radius:var(--radius-card);padding:12px 16px;margin-bottom:16px;color:var(--status-critical);font-size:13.5px;font-weight:600;">🔓 Unlocked — the mentee can still edit and resubmit this from their link. These are their last saved answers.</div>`:''}
       <div class="refl-block"><h4>My Progress</h4>${nb(lbl(REVIEW60_PROGRESS_OPTIONS,r60.progress))}</div>
       <div class="refl-block"><h4>My Biggest Growth</h4>${nb(lbl(REVIEW60_GROWTH_OPTIONS,r60.biggestGrowth))}</div>
       <div class="refl-block"><h4>My Leadership Gap</h4>${nb(lbl(REVIEW60_GAP_OPTIONS,r60.leadershipGap))}</div>
@@ -3874,7 +3903,7 @@ function renderLeader(){
 
   if(!leaderState.menteeId || !list.find(m=>m.id===leaderState.menteeId)){
     leaderState.menteeId = list.length ? list[0].id : null;
-    leaderState.round = leaderState.menteeId ? latestSubmittedRound(leaderState.menteeId) : null;
+    leaderState.round = leaderState.menteeId ? latestRoundWithData(leaderState.menteeId) : null;
   }
 
   const roster = document.getElementById('leader-roster');
@@ -3882,13 +3911,14 @@ function renderLeader(){
   list.forEach(m=>{
     const latest = latestSubmittedRound(m.id);
     const hasReview60 = hasSubmission(m.id, REVIEW60_ROUND.key);
-    const subStatus = latest ? (' · Skill '+fmt1(avg(getResponse(m.id,latest).skill))+'/5') : (hasReview60 ? ' · '+REVIEW60_ROUND.short+' only' : ' · Not started');
+    const anyUnlocked = ROUNDS.some(r=>!hasSubmission(m.id,r.key) && hasRoundData(m.id,r.key)) || (!hasReview60 && hasRoundData(m.id, REVIEW60_ROUND.key));
+    const subStatus = latest ? (' · Skill '+fmt1(avg(getResponse(m.id,latest).skill))+'/5') : (hasReview60 ? ' · '+REVIEW60_ROUND.short+' only' : (anyUnlocked ? ' · 🔓 Unlocked — awaiting resubmission' : ' · Not started'));
     const b = el(`<button class="roster-item ${m.id===leaderState.menteeId?'active':''}">
       <span class="name">${esc(m.name)}</span>
       <span class="sub">${esc(mentorOf(m.id).name)} ${subStatus}</span>
-      <span class="round-dots">${ROUNDS.map(r=>`<span class="round-dot ${hasSubmission(m.id,r.key)?'filled':''}" title="${r.label}"></span>`).join('')}<span class="round-dot-review ${hasReview60?'filled':''}" title="${esc(REVIEW60_ROUND.label)}"></span></span>
+      <span class="round-dots">${ROUNDS.map(r=>`<span class="round-dot ${hasSubmission(m.id,r.key)?'filled':(hasRoundData(m.id,r.key)?'unlocked':'')}" title="${r.label}"></span>`).join('')}<span class="round-dot-review ${hasReview60?'filled':(hasRoundData(m.id,REVIEW60_ROUND.key)?'unlocked':'')}" title="${esc(REVIEW60_ROUND.label)}"></span></span>
     </button>`);
-    b.addEventListener('click', ()=>{ leaderState.menteeId=m.id; leaderState.round=latestSubmittedRound(m.id); renderLeader(); });
+    b.addEventListener('click', ()=>{ leaderState.menteeId=m.id; leaderState.round=latestRoundWithData(m.id); renderLeader(); });
     roster.appendChild(b);
   });
 

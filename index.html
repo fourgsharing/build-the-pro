@@ -2758,6 +2758,33 @@ function printSummary(html, logoDataUrl){
   setTimeout(()=>{ printFrame.contentWindow.print(); }, 300);
 }
 
+/* Lets leadership/mentors unlock a submitted round from their own dashboard
+   (instead of needing the mentee to use "Clear this round" on their own
+   link) — keeps the mentee's existing answers in place, just clears
+   submittedAt so the mentee can go back to their link, edit, and resubmit.
+   Same double-click-to-confirm pattern as the mentee-side clear button. */
+window.unlockRound = unlockRound;
+async function unlockRound(menteeId, roundKey, btn){
+  if(btn){
+    if(btn.dataset.confirming!=='1'){
+      btn.dataset.confirming = '1';
+      if(!btn.dataset.origText) btn.dataset.origText = btn.textContent;
+      btn.textContent = 'Click again to confirm';
+      clearTimeout(btn._confirmTimer);
+      btn._confirmTimer = setTimeout(()=>{ btn.dataset.confirming=''; btn.textContent = btn.dataset.origText; }, 4000);
+      return;
+    }
+  }
+  const resp = DB.responses[menteeId] && DB.responses[menteeId][roundKey];
+  if(!resp || !resp.submittedAt){ toast('This round is already unlocked.'); return; }
+  resp.submittedAt = null;
+  await saveResponseToFirestore(menteeId, roundKey);
+  const mentee = MENTEES.find(m=>m.id===menteeId);
+  const roundLabel = (ROUNDS.find(r=>r.key===roundKey) || (roundKey===REVIEW60_ROUND.key ? REVIEW60_ROUND : null) || {}).short || roundKey;
+  toast(`Unlocked ${roundLabel} for ${mentee?mentee.name:menteeId} — they can edit and resubmit using their link.`);
+  if(currentUserRole==='mentor') renderMentor(); else renderLeader();
+}
+
 window.downloadMenteePdf = downloadMenteePdf;
 function downloadMenteePdf(menteeId, round){
   const resp = getResponse(menteeId, round);
@@ -3330,11 +3357,17 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     ? `<button class="round-pill review60-jump" type="button" onclick="document.getElementById('review60-detail-section').scrollIntoView({behavior:'smooth',block:'start'})">${esc(REVIEW60_ROUND.short)}</button>`
     : '');
 
+  // Resolved up front (not just inside the "has any main round" branch below)
+  // so the header's Unlock button always matches whichever round is shown.
+  const round = activeRound && hasSubmission(menteeId, activeRound) ? activeRound : latestSubmittedRound(menteeId);
+  const unlockBtn = (roundKey, label, small) => `<button class="btn btn-ghost ${small?'btn-sm':''}" onclick="unlockRound('${menteeId}','${roundKey}', this)" style="white-space:nowrap;font-size:${small?12:13}px;padding:${small?'5px 10px':'6px 14px'};" title="Let ${esc(mentee.name)} edit and resubmit ${esc(label)}">🔓 Unlock ${esc(label)}</button>`;
+
   let head = `<div class="detail-header">
     <div><h2>${esc(mentee.name)}</h2><div class="meta">${showMentorName?('Mentor: '+esc(mentor.name)+' · '):''}90-day Build The Pro tracker</div></div>
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="round-pills">${pills}</div>
       <button class="btn" onclick="downloadMenteePdf('${menteeId}','${activeRound}')" style="white-space:nowrap;font-size:13px;padding:6px 14px;">📄 Download PDF</button>
+      ${round ? unlockBtn(round, ROUNDS.find(r=>r.key===round)?.short || round, false) : ''}
     </div>
   </div>`;
 
@@ -3358,7 +3391,6 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
   out += `<div class="card"><div class="card-head"><div><div class="tag">Trend</div><h3>Drive / Motivation (15 items)</h3></div></div>
     <div class="card-body">${singleTrendChart(driveSeries, ROUNDS.map(r=>r.short), 'var(--accent-drive)')}</div></div>`;
 
-  const round = activeRound && hasSubmission(menteeId, activeRound) ? activeRound : latestSubmittedRound(menteeId);
   out += comparisonCardHtml(menteeId, round);
   const resp = getResponse(menteeId, round);
   const refl = resp.reflections;
@@ -3511,7 +3543,7 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     const r60 = getResponse(menteeId, REVIEW60_ROUND.key).reflections.review60;
     const lbl = (opts,key) => (opts.find(o=>o.key===key)||{}).label || '—';
     out += `<div id="review60-detail-section"></div>`;
-    out += `<div class="card"><div class="card-head"><div><div class="tag">${esc(REVIEW60_ROUND.short)}</div><h3>The 30-Day Leadership Shift</h3></div></div>
+    out += `<div class="card"><div class="card-head"><div><div class="tag">${esc(REVIEW60_ROUND.short)}</div><h3>The 30-Day Leadership Shift</h3></div>${unlockBtn(REVIEW60_ROUND.key, REVIEW60_ROUND.short, true)}</div>
       <div class="card-body">
       <div class="refl-block"><h4>My Progress</h4>${nb(lbl(REVIEW60_PROGRESS_OPTIONS,r60.progress))}</div>
       <div class="refl-block"><h4>My Biggest Growth</h4>${nb(lbl(REVIEW60_GROWTH_OPTIONS,r60.biggestGrowth))}</div>

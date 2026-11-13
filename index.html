@@ -1280,6 +1280,22 @@ function buildSummaryHtml(resp, overrideMenteeId, overrideRound){
     </p>
   </div>`;
 
+  // Trend & Comparison — grows automatically as more rounds get submitted
+  // (Before+Mid once Mid is in, +After once that's in, +Final once that's
+  // in too); only meaningful once there are 2+ rounds to compare. Shown on
+  // the mentee's own summary (this function) as well as leadership/mentor's
+  // view, and flows into the downloadable PDF since that reuses this HTML.
+  const submittedCount = mId ? ROUNDS.filter(r=>hasSubmission(mId,r.key)).length : 0;
+  if(mId && submittedCount >= 2){
+    const skillSeries = ROUNDS.map((r,i)=>({x:i, y: hasSubmission(mId,r.key) ? avg(getResponse(mId,r.key).skill) : null}));
+    const driveSeries = ROUNDS.map((r,i)=>({x:i, y: hasSubmission(mId,r.key) ? avg(getResponse(mId,r.key).drive) : null}));
+    h += `<div class="card"><div class="card-head"><div><div class="tag">Trend</div><h3>Skill Self-Assessment (35 items)</h3></div></div>
+      <div class="card-body">${singleTrendChart(skillSeries, ROUNDS.map(r=>r.short), 'var(--accent-skill)')}</div></div>`;
+    h += `<div class="card"><div class="card-head"><div><div class="tag">Trend</div><h3>Drive / Motivation (15 items)</h3></div></div>
+      <div class="card-body">${singleTrendChart(driveSeries, ROUNDS.map(r=>r.short), 'var(--accent-drive)')}</div></div>`;
+    h += comparisonCardHtml(mId, rKey);
+  }
+
   // Reflection: Strengths & Gaps
   h += `<div class="card"><div class="card-head"><div><div class="tag">Reflection</div><h3>WHAT CAN I REALLY DO? (STRENGTHS &amp; GAPS)</h3></div><div style="font-size:14px;font-weight:700;white-space:nowrap;">SCORE: ${fmt1(skillAvg)} / 5</div></div><div class="card-body">`;
   h += `<div class="field-label">MY STRENGTHS</div><ul class="summary-list">${(refl.strengths||[]).map(s=>`<li>${esc(s)}</li>`).join('')||'<li>—</li>'}</ul>`;
@@ -1591,7 +1607,7 @@ function renderMenteeForm(){
     if(!prevResp) return '';
     const v = prevResp[kind] && prevResp[kind][i];
     if(v===undefined || v===null || v==='') return '';
-    return `<span class="prev-chip" title="Jawaban round sebelumnya">${esc(prevShort)}: ${esc(v)}</span>`;
+    return `<span class="prev-chip" title="Sudah dijawab di round ${esc(prevShort)}">${esc(prevShort)}</span>`;
   }
   const container = document.getElementById('mentee-form');
   const mentee = MENTEES.find(m=>m.id===menteeState.id);
@@ -3249,37 +3265,51 @@ function sectionAvg(respObj, from, to){
   for(let i=from;i<=to;i++){ const v=Number((respObj||{})[i]); if(!isNaN(v)) vals.push(v); }
   return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
 }
-/* "Beginning vs current round" comparison card — shown above the round detail once a mentee has
-   two or more submitted rounds, so leadership/mentors can see movement since the previous round. */
-function comparisonCardHtml(menteeId, round){
-  if(!round || round==='before') return '';
-  const prevKey = previousSubmittedRound(menteeId, round);
-  if(!prevKey || !hasSubmission(menteeId, round)) return '';
-  const cur = getResponse(menteeId, round);
-  const prev = getResponse(menteeId, prevKey);
-  const curShort = ROUNDS.find(r=>r.key===round).short;
-  const prevShort = ROUNDS.find(r=>r.key===prevKey).short;
-  const skillNow = avg(cur.skill), skillPrev = avg(prev.skill);
-  const driveNow = avg(cur.drive), drivePrev = avg(prev.drive);
-  const deltaSkill = (skillNow!==null && skillPrev!==null) ? skillNow-skillPrev : null;
-  const deltaDrive = (driveNow!==null && drivePrev!==null) ? driveNow-drivePrev : null;
+/* Cumulative comparison card — once a mentee has 2+ submitted rounds (in
+   ROUNDS order, up to and including `uptoRound`), shows every one of them
+   side by side rather than just the immediately-previous round: Before+Mid
+   once Mid is in, Before+Mid+After once After is in, and so on. Each column
+   after the first shows its delta from the one before it. Shared by the
+   leadership/mentor detail view and the mentee's own summary (and so the
+   downloadable PDF too, since that reuses buildSummaryHtml). */
+function comparisonCardHtml(menteeId, uptoRound){
+  const uptoIdx = ROUNDS.findIndex(r=>r.key===uptoRound);
+  if(uptoIdx < 0) return '';
+  const cols = ROUNDS.slice(0, uptoIdx+1).filter(r=>hasSubmission(menteeId, r.key));
+  if(cols.length < 2) return '';
+  const resps = cols.map(r=>getResponse(menteeId, r.key));
+
+  function overallRow(vals, label){
+    const parts = vals.map((v,i)=>{
+      const d = i>0 && v!==null && vals[i-1]!==null ? v-vals[i-1] : null;
+      return `<span style="font-family:var(--font-mono);">${esc(cols[i].short)} ${fmt1(v)}</span>${d===null?'':' '+fmtDelta(d)}`;
+    });
+    return `<div><div class="field-label" style="margin-top:0;padding-top:0;border-top:none;">${label}</div>
+      <p style="font-size:14px;margin:0;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">${parts.join('<span style="color:var(--ink-mute);">&rarr;</span>')}</p></div>`;
+  }
   const sectionRows = (sections, kind) => sections.map(sec=>{
-    const a = sectionAvg(prev[kind], sec.from, sec.to);
-    const b = sectionAvg(cur[kind], sec.from, sec.to);
-    const d = (a!==null && b!==null) ? b-a : null;
-    return `<tr><td style="padding:5px 8px;">${esc(sec.title)}</td><td style="padding:5px 8px;text-align:center;font-family:var(--font-mono);">${fmt1(a)}</td><td style="padding:5px 8px;text-align:center;font-family:var(--font-mono);">${fmt1(b)}</td><td style="padding:5px 8px;text-align:center;">${d===null?'—':fmtDelta(d)}</td></tr>`;
+    const vals = resps.map(r=>sectionAvg(r[kind], sec.from, sec.to));
+    const cells = vals.map((v,i)=>{
+      const d = i>0 && v!==null && vals[i-1]!==null ? v-vals[i-1] : null;
+      return `<td style="padding:5px 8px;text-align:center;font-family:var(--font-mono);">${fmt1(v)}${d===null?'':'<br>'+fmtDelta(d)}</td>`;
+    }).join('');
+    return `<tr><td style="padding:5px 8px;">${esc(sec.title)}</td>${cells}</tr>`;
   }).join('');
-  return `<div class="card"><div class="card-head"><div><div class="tag">Comparison</div><h3>${esc(prevShort)} vs ${esc(curShort)}</h3></div></div>
+
+  const skillVals = resps.map(r=>avg(r.skill));
+  const driveVals = resps.map(r=>avg(r.drive));
+  const headerCells = cols.map(r=>`<th style="padding:5px 8px;">${esc(r.short)}</th>`).join('');
+  const title = cols.map(r=>r.short).join(' → ');
+
+  return `<div class="card"><div class="card-head"><div><div class="tag">Comparison</div><h3>${esc(title)}</h3></div></div>
     <div class="card-body">
     <div style="display:flex;gap:28px;flex-wrap:wrap;margin-bottom:16px;">
-      <div><div class="field-label" style="margin-top:0;padding-top:0;border-top:none;">Skill — Overall</div>
-        <p style="font-size:20px;font-family:var(--font-mono);margin:0;">${fmt1(skillPrev)} &rarr; ${fmt1(skillNow)} ${deltaSkill===null?'':fmtDelta(deltaSkill)}</p></div>
-      <div><div class="field-label" style="margin-top:0;padding-top:0;border-top:none;">Drive — Overall</div>
-        <p style="font-size:20px;font-family:var(--font-mono);margin:0;">${fmt1(drivePrev)} &rarr; ${fmt1(driveNow)} ${deltaDrive===null?'':fmtDelta(deltaDrive)}</p></div>
+      ${overallRow(skillVals, 'Skill — Overall')}
+      ${overallRow(driveVals, 'Drive — Overall')}
     </div>
     <div style="overflow-x:auto;">
     <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:420px;">
-      <thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:5px 8px;">Section</th><th style="padding:5px 8px;">${esc(prevShort)}</th><th style="padding:5px 8px;">${esc(curShort)}</th><th style="padding:5px 8px;">&Delta;</th></tr></thead>
+      <thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:5px 8px;">Section</th>${headerCells}</tr></thead>
       <tbody>${sectionRows(SKILL_SECTIONS,'skill')}${sectionRows(DRIVE_SECTIONS,'drive')}</tbody>
     </table>
     </div>

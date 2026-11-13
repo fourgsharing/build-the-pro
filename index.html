@@ -3409,6 +3409,7 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
       <div class="round-pills">${pills}</div>
       <button class="btn" onclick="downloadMenteePdf('${menteeId}','${activeRound}')" style="white-space:nowrap;font-size:13px;padding:6px 14px;">📄 Download PDF</button>
       ${currentUserRole==='leadership' && round && hasSubmission(menteeId, round) ? unlockBtn(round, ROUNDS.find(r=>r.key===round)?.short || round, false) : ''}
+      ${currentUserRole==='leadership' && hasSubmission(menteeId, REVIEW60_ROUND.key) ? unlockBtn(REVIEW60_ROUND.key, REVIEW60_ROUND.short, false) : ''}
     </div>
   </div>`;
 
@@ -3589,7 +3590,7 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
     const r60 = getResponse(menteeId, REVIEW60_ROUND.key).reflections.review60;
     const lbl = (opts,key) => (opts.find(o=>o.key===key)||{}).label || '—';
     out += `<div id="review60-detail-section"></div>`;
-    out += `<div class="card"><div class="card-head"><div><div class="tag">${esc(REVIEW60_ROUND.short)}</div><h3>The 30-Day Leadership Shift</h3></div>${currentUserRole==='leadership' && hasReview60?unlockBtn(REVIEW60_ROUND.key, REVIEW60_ROUND.short, true):''}</div>
+    out += `<div class="card"><div class="card-head"><div><div class="tag">${esc(REVIEW60_ROUND.short)}</div><h3>The 30-Day Leadership Shift</h3></div></div>
       <div class="card-body">
       ${!hasReview60?`<div style="background:color-mix(in oklab, var(--status-critical) 10%, var(--surface));border:1px solid var(--status-critical);border-radius:var(--radius-card);padding:12px 16px;margin-bottom:16px;color:var(--status-critical);font-size:13.5px;font-weight:600;">🔓 Unlocked — the mentee can still edit and resubmit this from their link. These are their last saved answers.</div>`:''}
       <div class="refl-block"><h4>My Progress</h4>${nb(lbl(REVIEW60_PROGRESS_OPTIONS,r60.progress))}</div>

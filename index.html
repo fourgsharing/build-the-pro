@@ -949,7 +949,8 @@ async function loadAllFromFirestore(){
       skill: d.skill || {},
       drive: d.drive || {},
       reflections: d.reflections || {},
-      submittedAt: d.submittedAt || null
+      submittedAt: d.submittedAt || null,
+      unlockedAt: d.unlockedAt || null
     };
   });
 }
@@ -980,7 +981,8 @@ async function loadMenteeDataFromFirestore(menteeId){
       skill: d.skill || {},
       drive: d.drive || {},
       reflections: d.reflections || {},
-      submittedAt: d.submittedAt || null
+      submittedAt: d.submittedAt || null,
+      unlockedAt: d.unlockedAt || null
     };
   });
 }
@@ -995,7 +997,8 @@ async function saveResponseToFirestore(menteeId, round){
     skill: resp.skill || {},
     drive: resp.drive || {},
     reflections: resp.reflections || {},
-    submittedAt: resp.submittedAt || null
+    submittedAt: resp.submittedAt || null,
+    unlockedAt: resp.unlockedAt || null
   });
 }
 
@@ -1115,7 +1118,8 @@ function emptyResponse(){
       commitStop:'', commitStart:'', commitContinue:'', signatureData:'',
       review60: blankReview60()
     },
-    submittedAt:null
+    submittedAt:null,
+    unlockedAt:null
   };
 }
 function blankGap(){ return {skill:'', current:'', target:'', evidence:''}; }
@@ -1147,6 +1151,7 @@ function ensureResponseShape(r){
     while(p.targets.length<3) p.targets.push('');
   });
   if(!refl.barriers) refl.barriers = {};
+  if(r.unlockedAt === undefined) r.unlockedAt = null;
   refl.review60 = Object.assign(blankReview60(), refl.review60||{});
   if(!Array.isArray(refl.review60.weeklySteps)) refl.review60.weeklySteps = ['','','',''];
   while(refl.review60.weeklySteps.length<4) refl.review60.weeklySteps.push('');
@@ -1162,11 +1167,20 @@ function hasSubmission(menteeId, round){
   const r = DB.responses[menteeId] && DB.responses[menteeId][round];
   return !!(r && r.submittedAt);
 }
-/* True once a response record exists for this round, whether or not it's
-   currently submitted — covers an "unlocked" round whose answers are still
-   sitting in Firestore, just waiting on the mentee to resubmit. */
-function hasRoundData(menteeId, round){
-  return !!(DB.responses[menteeId] && DB.responses[menteeId][round]);
+/* True only when a round was explicitly reopened via the mentor/leadership
+   "Unlock" button and hasn't been resubmitted since — NOT just whenever a
+   response record exists. A mentee's answers autosave as they type, so an
+   ordinary in-progress draft (never submitted at all) also has a record
+   with no submittedAt; that's normal and shouldn't read as "unlocked". */
+function isUnlockedRound(menteeId, round){
+  const r = DB.responses[menteeId] && DB.responses[menteeId][round];
+  return !!(r && !r.submittedAt && r.unlockedAt);
+}
+/* Submitted, or explicitly unlocked-and-waiting-on-resubmission — the two
+   states leadership/mentors should be able to see answers for. An ordinary
+   in-progress draft (autosaved, never submitted, never unlocked) is neither. */
+function isViewableRound(menteeId, round){
+  return hasSubmission(menteeId, round) || isUnlockedRound(menteeId, round);
 }
 function latestSubmittedRound(menteeId){
   for(let i=ROUNDS.length-1;i>=0;i--){ if(hasSubmission(menteeId, ROUNDS[i].key)) return ROUNDS[i].key; }
@@ -1175,7 +1189,7 @@ function latestSubmittedRound(menteeId){
 function latestRoundWithData(menteeId){
   const submitted = latestSubmittedRound(menteeId);
   if(submitted) return submitted;
-  for(let i=ROUNDS.length-1;i>=0;i--){ if(hasRoundData(menteeId, ROUNDS[i].key)) return ROUNDS[i].key; }
+  for(let i=ROUNDS.length-1;i>=0;i--){ if(isUnlockedRound(menteeId, ROUNDS[i].key)) return ROUNDS[i].key; }
   return null;
 }
 function previousRoundKey(roundKey){
@@ -2404,6 +2418,7 @@ function wireReview60Form(resp, refl, locked){
     }
 
     resp.submittedAt = new Date().toISOString();
+    resp.unlockedAt = null;
     saveResponseToFirestore(menteeState.id, 'review60');
     renderReview60Form();
     const mentee = MENTEES.find(m=>m.id===menteeState.id);
@@ -2794,6 +2809,7 @@ async function unlockRound(menteeId, roundKey, btn){
   const resp = DB.responses[menteeId] && DB.responses[menteeId][roundKey];
   if(!resp || !resp.submittedAt){ toast('This round is already unlocked.'); return; }
   resp.submittedAt = null;
+  resp.unlockedAt = new Date().toISOString();
   await saveResponseToFirestore(menteeId, roundKey);
   const mentee = MENTEES.find(m=>m.id===menteeId);
   const roundLabel = (ROUNDS.find(r=>r.key===roundKey) || (roundKey===REVIEW60_ROUND.key ? REVIEW60_ROUND : null) || {}).short || roundKey;
@@ -3104,6 +3120,7 @@ document.getElementById('mentee-submit-btn').addEventListener('click', ()=>{
   }
 
   resp.submittedAt = new Date().toISOString();
+  resp.unlockedAt = null;
   saveResponseToFirestore(menteeState.id, menteeState.round);
   renderMenteeStepper();
   renderMenteeForm();
@@ -3274,12 +3291,12 @@ function renderMentor(){
     const latest = latestSubmittedRound(m.id);
     const avgSkill = latest ? avg(getResponse(m.id, latest).skill) : null;
     const hasReview60 = hasSubmission(m.id, REVIEW60_ROUND.key);
-    const anyUnlocked = ROUNDS.some(r=>!hasSubmission(m.id,r.key) && hasRoundData(m.id,r.key)) || (!hasReview60 && hasRoundData(m.id, REVIEW60_ROUND.key));
+    const anyUnlocked = ROUNDS.some(r=>isUnlockedRound(m.id,r.key)) || isUnlockedRound(m.id, REVIEW60_ROUND.key);
     const subLabel = avgSkill!==null ? 'Skill avg '+fmt1(avgSkill)+'/5' : (hasReview60 ? REVIEW60_ROUND.short+' only' : (anyUnlocked ? '🔓 Unlocked — awaiting resubmission' : 'No submissions yet'));
     const b = el(`<button class="roster-item ${m.id===mentorState.menteeId?'active':''}">
       <span class="name">${esc(m.name)}</span>
       <span class="sub">${subLabel}</span>
-      <span class="round-dots">${ROUNDS.map(r=>`<span class="round-dot ${hasSubmission(m.id,r.key)?'filled':(hasRoundData(m.id,r.key)?'unlocked':'')}" title="${r.label}"></span>`).join('')}<span class="round-dot-review ${hasReview60?'filled':(hasRoundData(m.id,REVIEW60_ROUND.key)?'unlocked':'')}" title="${esc(REVIEW60_ROUND.label)}"></span></span>
+      <span class="round-dots">${ROUNDS.map(r=>`<span class="round-dot ${hasSubmission(m.id,r.key)?'filled':(isUnlockedRound(m.id,r.key)?'unlocked':'')}" title="${r.label}"></span>`).join('')}<span class="round-dot-review ${hasReview60?'filled':(isUnlockedRound(m.id,REVIEW60_ROUND.key)?'unlocked':'')}" title="${esc(REVIEW60_ROUND.label)}"></span></span>
     </button>`);
     b.addEventListener('click', ()=>{ mentorState.menteeId=m.id; mentorState.round=latestRoundWithData(m.id); renderMentor(); });
     roster.appendChild(b);
@@ -3365,12 +3382,12 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
   const mentee = MENTEES.find(m=>m.id===menteeId);
   const mentor = mentorOf(menteeId);
   const anySubmitted = ROUNDS.some(r=>hasSubmission(menteeId,r.key));
-  const anyRoundData = ROUNDS.some(r=>hasRoundData(menteeId,r.key));
-  const hasReview60Data = hasRoundData(menteeId, REVIEW60_ROUND.key);
+  const anyRoundData = ROUNDS.some(r=>isViewableRound(menteeId,r.key));
+  const hasReview60Data = isViewableRound(menteeId, REVIEW60_ROUND.key);
 
   const pills = ROUNDS.map(r=>{
     const has = hasSubmission(menteeId, r.key);
-    const unlocked = !has && hasRoundData(menteeId, r.key);
+    const unlocked = isUnlockedRound(menteeId, r.key);
     const active = r.key===activeRound;
     const cls = has ? '' : (unlocked ? 'unlocked' : 'missing');
     return `<button class="round-pill ${active?'active':''} ${cls}" data-round="${r.key}" ${(!has && !unlocked)?'disabled':''} title="${unlocked?'Unlocked — awaiting resubmission':''}">${r.short}${unlocked?' 🔓':''}</button>`;
@@ -3382,7 +3399,7 @@ function renderMenteeDetail(menteeId, activeRound, showMentorName){
   // so the header's Unlock button always matches whichever round is shown.
   // Falls back through unlocked-but-has-data rounds too, so a mentee whose
   // only round got unlocked doesn't just vanish from view.
-  const round = activeRound && hasRoundData(menteeId, activeRound) ? activeRound : latestRoundWithData(menteeId);
+  const round = activeRound && isViewableRound(menteeId, activeRound) ? activeRound : latestRoundWithData(menteeId);
   const unlockBtn = (roundKey, label, small) => `<button class="btn btn-ghost ${small?'btn-sm':''}" onclick="unlockRound('${menteeId}','${roundKey}', this)" style="white-space:nowrap;font-size:${small?12:13}px;padding:${small?'5px 10px':'6px 14px'};" title="Let ${esc(mentee.name)} edit and resubmit ${esc(label)}">🔓 Unlock ${esc(label)}</button>`;
 
   let head = `<div class="detail-header">
@@ -3911,12 +3928,12 @@ function renderLeader(){
   list.forEach(m=>{
     const latest = latestSubmittedRound(m.id);
     const hasReview60 = hasSubmission(m.id, REVIEW60_ROUND.key);
-    const anyUnlocked = ROUNDS.some(r=>!hasSubmission(m.id,r.key) && hasRoundData(m.id,r.key)) || (!hasReview60 && hasRoundData(m.id, REVIEW60_ROUND.key));
+    const anyUnlocked = ROUNDS.some(r=>isUnlockedRound(m.id,r.key)) || isUnlockedRound(m.id, REVIEW60_ROUND.key);
     const subStatus = latest ? (' · Skill '+fmt1(avg(getResponse(m.id,latest).skill))+'/5') : (hasReview60 ? ' · '+REVIEW60_ROUND.short+' only' : (anyUnlocked ? ' · 🔓 Unlocked — awaiting resubmission' : ' · Not started'));
     const b = el(`<button class="roster-item ${m.id===leaderState.menteeId?'active':''}">
       <span class="name">${esc(m.name)}</span>
       <span class="sub">${esc(mentorOf(m.id).name)} ${subStatus}</span>
-      <span class="round-dots">${ROUNDS.map(r=>`<span class="round-dot ${hasSubmission(m.id,r.key)?'filled':(hasRoundData(m.id,r.key)?'unlocked':'')}" title="${r.label}"></span>`).join('')}<span class="round-dot-review ${hasReview60?'filled':(hasRoundData(m.id,REVIEW60_ROUND.key)?'unlocked':'')}" title="${esc(REVIEW60_ROUND.label)}"></span></span>
+      <span class="round-dots">${ROUNDS.map(r=>`<span class="round-dot ${hasSubmission(m.id,r.key)?'filled':(isUnlockedRound(m.id,r.key)?'unlocked':'')}" title="${r.label}"></span>`).join('')}<span class="round-dot-review ${hasReview60?'filled':(isUnlockedRound(m.id,REVIEW60_ROUND.key)?'unlocked':'')}" title="${esc(REVIEW60_ROUND.label)}"></span></span>
     </button>`);
     b.addEventListener('click', ()=>{ leaderState.menteeId=m.id; leaderState.round=latestRoundWithData(m.id); renderLeader(); });
     roster.appendChild(b);
